@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 Module lõi Trộn Đề Trắc Nghiệm Chuẩn GDPT 2018 (3 Phần: TNKQ 4 lựa chọn, Đúng/Sai, Trả lời ngắn).
-Bảo toàn 100% cấu trúc XML của Microsoft Word (.docx):
-- Công thức Toán/Lý/Hóa: Office MathML (<m:oMath>, <m:oMathPara>), MathType OLE (<w:object>), Equation.
-- Hình ảnh & Đồ thị: DrawingML (<w:drawing>), VML (<w:pict>), mối quan hệ rId (Relationships).
-- Định dạng văn bản: In đậm, in nghiêng, chỉ số trên/dưới (superscript/subscript), bảng biểu.
-
-Đã nâng cấp xử lý triệt để:
-1. Nhận diện chính xác khi 4 đáp án A. B. C. D. nằm trên CÙNG 1 DÒNG (hoặc 2 dòng), kể cả khi:
-   - Giữa đáp án trước (hoặc công thức MathType/Equation) và nhãn B., C., D. kế tiếp chỉ có 1 dấu cách, 1 dấu Tab hoặc gõ sát nhau sau dấu chấm.
-   - Chữ cái nhãn và dấu chấm bị Word tách thành nhiều thẻ <w:r> (ví dụ: <w:r><u>D</u></w:r><w:r>.</w:r>).
-   - Gạch chân được đặt ở <w:rPr> của <w:r>, ở <w:pPr>/<w:rPr>, hoặc trong Character Style.
-2. Xóa sạch 100% dấu vết gạch chân ở phần nhãn đáp án sau khi trộn (không còn sót gạch chân ở dấu chấm '.' hay khoảng trắng đầu đáp án).
+Phiên bản v2.2 - Đã khắc phục triệt để lỗi mất nội dung phương án ở cả Phần I và Phần II:
+1. Bảo toàn 100% thẻ <w:r> chứa công thức MathType OLE (<w:object>), hình ảnh (<w:drawing>, <w:pict>),
+   ký tự đặc biệt (<w:sym>) ngay ở đầu phương án (không có thẻ <w:t> nên bản cũ tưởng nhầm là run rỗng và bỏ qua).
+2. Chống cắt nhầm câu khi trong nội dung mệnh đề có tên điểm/biến kết thúc bằng dấu chấm như
+   "điểm B.", "cạnh b.", "mặt phẳng (P).": chỉ nhận diện nhãn phương án nằm giữa dòng khi đứng sau phím Tab,
+   >= 2 dấu cách, hoặc nhãn đó được định dạng In Đậm (<w:b>) / Gạch Chân (<w:u>) / có dấu *.
+3. Hỗ trợ trường hợp phương án A. hoặc câu hỏi nằm nối tiếp ngay trên cùng dòng thân câu hỏi.
+4. Xóa sạch 100% gạch chân ở nhãn phương án sau khi trộn.
 """
 
 from __future__ import annotations
@@ -84,6 +81,18 @@ def get_paragraph_text(p_elem: OxmlElement) -> str:
     return "".join(texts)
 
 
+def run_has_non_text_media(r_elem: OxmlElement) -> bool:
+    """
+    Kiểm tra xem thẻ <w:r> có chứa đối tượng công thức MathType (<w:object>),
+    hình vẽ (<w:drawing>, <w:pict>), ký hiệu (<w:sym>), hay công thức toán không.
+    Rất quan trọng: Nếu có, tuyệt đối KHÔNG ĐƯỢC coi run này là rỗng!
+    """
+    for sub in r_elem:
+        if sub.tag not in (qn("w:rPr"), qn("w:t"), qn("w:tab")):
+            return True
+    return False
+
+
 def is_rPr_underlined(rPr: Optional[OxmlElement]) -> bool:
     """Kiểm tra xem một thẻ <w:rPr> có thuộc tính gạch chân <w:u> hay không."""
     if rPr is None:
@@ -91,6 +100,18 @@ def is_rPr_underlined(rPr: Optional[OxmlElement]) -> bool:
     u_elem = rPr.find(qn("w:u"))
     if u_elem is not None:
         val = u_elem.get(qn("w:val")) or u_elem.get("val")
+        if val is None or val.lower() not in ("none", "0", "false"):
+            return True
+    return False
+
+
+def is_rPr_bold(rPr: Optional[OxmlElement]) -> bool:
+    """Kiểm tra xem một thẻ <w:rPr> có thuộc tính in đậm <w:b> hay không."""
+    if rPr is None:
+        return False
+    b_elem = rPr.find(qn("w:b"))
+    if b_elem is not None:
+        val = b_elem.get(qn("w:val")) or b_elem.get("val")
         if val is None or val.lower() not in ("none", "0", "false"):
             return True
     return False
@@ -104,6 +125,18 @@ def is_run_underlined(r_elem: OxmlElement, p_elem: Optional[OxmlElement] = None)
     if p_elem is not None:
         pPr = p_elem.find(qn("w:pPr"))
         if pPr is not None and is_rPr_underlined(pPr.find(qn("w:rPr"))):
+            return True
+    return False
+
+
+def is_run_bold(r_elem: OxmlElement, p_elem: Optional[OxmlElement] = None) -> bool:
+    """Kiểm tra xem thẻ <w:r> có định dạng in đậm hay không."""
+    rPr = r_elem.find(qn("w:rPr"))
+    if is_rPr_bold(rPr):
+        return True
+    if p_elem is not None:
+        pPr = p_elem.find(qn("w:pPr"))
+        if pPr is not None and is_rPr_bold(pPr.find(qn("w:rPr"))):
             return True
     return False
 
@@ -130,16 +163,14 @@ def remove_underline_from_paragraph_pPr(p_elem: OxmlElement) -> None:
 
 def clean_option_paragraph_underlines(p_elem: OxmlElement) -> None:
     """
-    Xóa triệt để gạch chân còn sót lại ở đầu phương án (ví dụ: dấu chấm '.', dấu ')',
-    khoảng trắng đầu câu, hoặc khi giáo viên bôi đen gạch chân cả phương án đúng).
-    Chỉ giữ lại gạch chân nếu đó là từ khóa nhấn mạnh nằm ở giữa câu.
+    Xóa triệt để gạch chân còn sót lại ở đầu phương án (dấu chấm '.', dấu ')', khoảng trắng),
+    đồng thời bảo toàn mọi đối tượng công thức/hình ảnh.
     """
     remove_underline_from_paragraph_pPr(p_elem)
     direct_runs = [c for c in p_elem if c.tag == qn("w:r")]
     if not direct_runs:
         return
 
-    # Nếu tất cả các run có chữ trong phương án đều bị gạch chân (giáo viên gạch chân cả đáp án) -> xóa hết gạch chân
     non_empty_runs = [
         r for r in direct_runs
         if "".join((t.text or "") for t in r.findall(qn("w:t"))).strip()
@@ -149,24 +180,24 @@ def clean_option_paragraph_underlines(p_elem: OxmlElement) -> None:
             remove_underline_from_run(r)
         return
 
-    # Xóa gạch chân ở các run đầu phương án nếu chỉ chứa dấu câu (., ), :) hoặc khoảng trắng,
-    # hoặc run đầu tiên ngay sát nhãn bị dính định dạng gạch chân từ chữ cái A/B/C/D
-    seen_meaningful_char = False
+    seen_meaningful_content = False
     for r in direct_runs:
+        if run_has_non_text_media(r):
+            remove_underline_from_run(r)
+            seen_meaningful_content = True
+            continue
         txt = "".join((t.text or "") for t in r.findall(qn("w:t")))
         stripped = txt.strip()
         if not stripped:
             remove_underline_from_run(r)
             continue
-        if not seen_meaningful_char:
-            # Nếu run đầu chỉ là dấu chấm, dấu ngoặc hoặc ký tự lẻ dính từ nhãn "A." -> xóa gạch chân
+        if not seen_meaningful_content:
             if re.fullmatch(r"[\.\:\)\-\s]+", stripped):
                 remove_underline_from_run(r)
                 continue
-            # Nếu ngay đầu run vẫn còn sót dấu chấm/ngoặc từ nhãn (vd ". 50600") -> cắt dấu chấm và bỏ gạch chân
             if re.match(r"^[\.\:\)]\s*", stripped) and is_run_underlined(r):
                 remove_underline_from_run(r)
-            seen_meaningful_char = True
+            seen_meaningful_content = True
 
 
 def strip_prefix_from_paragraph(p_elem: OxmlElement, regex_pattern: str) -> Tuple[OxmlElement, bool, str]:
@@ -174,11 +205,11 @@ def strip_prefix_from_paragraph(p_elem: OxmlElement, regex_pattern: str) -> Tupl
     Sao chép thẻ <w:p>, kiểm tra và cắt bỏ phần nhãn đầu câu/đáp án khớp với `regex_pattern`
     (ví dụ: 'Câu 12: ', 'Câu 1. ', 'A. ', '*A. ', 'a) '), đồng thời kiểm tra xem phần nhãn
     có được gạch chân hay đánh dấu * hay không.
+    Bảo toàn 100% các node công thức/hình ảnh (<w:object>, <w:drawing>, <m:oMath>).
     """
     new_p = copy.deepcopy(p_elem)
     remove_underline_from_paragraph_pPr(new_p)
 
-    # Chỉ duyệt các thẻ <w:r> trực tiếp của <w:p> (không đi vào bên trong <m:oMath>)
     t_nodes: List[Tuple[OxmlElement, OxmlElement, str]] = []
     for child in new_p:
         if child.tag == qn("w:r"):
@@ -206,7 +237,6 @@ def strip_prefix_from_paragraph(p_elem: OxmlElement, regex_pattern: str) -> Tupl
         node_end = curr_pos + len(txt)
         curr_pos = node_end
 
-        # Bất kỳ run nào nằm trong vùng prefix (chứa chữ cái A/B/C/D hoặc dấu chấm đi kèm) có gạch chân -> tính là đáp án đúng
         if node_start < cut_len and node_end > 0 and txt.strip():
             if is_run_underlined(r_elem, p_elem):
                 is_underlined = True
@@ -223,23 +253,24 @@ def strip_prefix_from_paragraph(p_elem: OxmlElement, regex_pattern: str) -> Tupl
             offset = cut_len - node_start
             t_elem.text = txt[offset:].lstrip(" \t")
             t_elem.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
-            # Xóa gạch chân ở phần còn lại nếu run này bị dính gạch chân từ chữ cái đầu
             remove_underline_from_run(r_elem)
 
     clean_option_paragraph_underlines(new_p)
     return new_p, (is_underlined or has_asterisk), label_char
 
 
-def _split_runs_at_char_offsets(p_elem: OxmlElement) -> List[OxmlElement]:
+def _split_runs_at_char_offsets(p_elem: OxmlElement, part: int = 1) -> List[OxmlElement]:
     """
-    Tách các thẻ <w:r> thành từng đơn vị nhỏ (mỗi <w:tab/> thành 1 run riêng,
-    và các chuỗi văn bản có chứa mẫu nhãn 'A.', 'B.', 'C.', 'D.' ở giữa câu cũng được tách thành run riêng)
-    để việc cắt phương án inline chính xác tuyệt đối tới từng ký tự.
+    Chuẩn hóa danh sách các phần tử con trong <w:p>:
+    - Tách mỗi sub-element trong <w:r> (<w:t>, <w:tab>, <w:object>, <w:drawing>, <w:pict>, <w:sym>)
+      thành một thẻ <w:r> độc lập có giữ nguyên <w:rPr> (để không bao giờ làm rơi <w:object> hay <w:drawing>).
+    - Đối với <w:t> chứa nhiều phương án gõ liền nhau bằng khoảng trắng:
+      + Nếu cách nhau bởi >= 2 khoảng trắng (hoặc Tab): luôn tách trước nhãn A., B., C., D. / a), b), c), d).
+      + Nếu chỉ cách nhau bởi 1 khoảng trắng: chỉ tách nếu chính run đó đang được In Đậm (<w:b>) hoặc Gạch Chân (<w:u>)
+        hoặc có dấu `*` hoặc dấu `)` (đối với Phần II: `a)`, `b)`, `c)`, `d)`), nhằm tránh cắt nhầm chữ
+        "điểm B.", "cạnh b." trong văn bản bình thường!
     """
     expanded: List[OxmlElement] = []
-    # Mẫu nhận diện ranh giới trước một nhãn phương án nằm giữa dòng:
-    # Trước nó là khoảng trắng, tab, hoặc đầu chuỗi; theo sau là (*?)([A-Da-d])([.:\)])(\s*)
-    inline_marker_re = re.compile(r"(\s+)(\*?\s*[A-Da-d]\s*[\.\:\)]\s*)")
 
     for child in p_elem:
         if child.tag == qn("w:pPr"):
@@ -249,17 +280,34 @@ def _split_runs_at_char_offsets(p_elem: OxmlElement) -> List[OxmlElement]:
             continue
 
         rPr = child.find(qn("w:rPr"))
+        run_styled = is_rPr_bold(rPr) or is_rPr_underlined(rPr)
+
         for sub in child:
             if sub.tag == qn("w:rPr"):
                 continue
             if sub.tag == qn("w:t") and sub.text:
                 raw_txt = sub.text
-                # Tách nếu bên trong 1 <w:t> có chứa " B. " hoặc " C. " hoặc " D. "
+                # Chọn biểu thức tách bên trong 1 <w:t> an toàn:
+                if part == 1:
+                    if run_styled:
+                        inline_re = re.compile(r"(\s+)(\*?\s*[A-D]\s*[\.\:\)]\s*)")
+                    else:
+                        # Trong run chữ thường: phải có >= 2 dấu cách hoặc dấu * trước A., B., C., D.
+                        inline_re = re.compile(r"(\s{2,}|\s+(?=\*))(\*?\s*[A-D]\s*[\.\:\)]\s*)")
+                else:
+                    if run_styled:
+                        inline_re = re.compile(r"(\s+)(\*?\s*[a-d]\s*[\)\.]\s*)")
+                    else:
+                        # Trong run chữ thường Phần II: chấp nhận a), b), c), d) (dấu ngoặc đơn) hoặc >= 2 dấu cách trước a.
+                        inline_re = re.compile(r"(\s+)(\*?\s*[a-d]\s*\)\s*)|(\s{2,})(\*?\s*[a-d]\s*\.\s*)")
+
                 pos = 0
-                for m in inline_marker_re.finditer(raw_txt):
-                    before_part = raw_txt[pos : m.start(1)]
-                    sep_space = m.group(1)
-                    marker_part = m.group(2)
+                for m in inline_re.finditer(raw_txt):
+                    sep_space = m.group(1) or m.group(3)
+                    marker_part = m.group(2) or m.group(4)
+                    start_sep = m.start(1) if m.group(1) is not None else m.start(3)
+
+                    before_part = raw_txt[pos:start_sep]
                     if before_part:
                         r1 = OxmlElement("w:r")
                         if rPr is not None:
@@ -269,14 +317,15 @@ def _split_runs_at_char_offsets(p_elem: OxmlElement) -> List[OxmlElement]:
                         t1.text = before_part
                         r1.append(t1)
                         expanded.append(r1)
-                    # Tạo run khoảng trắng phân cách
+
                     r_sep = OxmlElement("w:r")
+                    # Đánh dấu nếu khoảng trắng phân cách >= 2 ký tự
                     t_sep = OxmlElement("w:t")
                     t_sep.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
                     t_sep.text = sep_space
                     r_sep.append(t_sep)
                     expanded.append(r_sep)
-                    # Tạo run chứa marker_part (giữ nguyên rPr để bảo toàn gạch chân)
+
                     r_mk = OxmlElement("w:r")
                     if rPr is not None:
                         r_mk.append(copy.deepcopy(rPr))
@@ -285,7 +334,8 @@ def _split_runs_at_char_offsets(p_elem: OxmlElement) -> List[OxmlElement]:
                     t_mk.text = marker_part
                     r_mk.append(t_mk)
                     expanded.append(r_mk)
-                    pos = m.end(2)
+
+                    pos = m.end()
 
                 rem_txt = raw_txt[pos:]
                 if rem_txt:
@@ -298,6 +348,7 @@ def _split_runs_at_char_offsets(p_elem: OxmlElement) -> List[OxmlElement]:
                     r_rem.append(t_rem)
                     expanded.append(r_rem)
             else:
+                # Bảo toàn nguyên vẹn <w:object> (MathType), <w:drawing>, <w:pict>, <w:sym>, <w:tab>
                 new_r = OxmlElement("w:r")
                 if rPr is not None:
                     new_r.append(copy.deepcopy(rPr))
@@ -310,22 +361,21 @@ def _split_runs_at_char_offsets(p_elem: OxmlElement) -> List[OxmlElement]:
 def split_inline_options_in_paragraph(
     p_elem: OxmlElement,
     part: int = 1,
-    expected_next_labels: Optional[List[str]] = None,
 ) -> Optional[List[Tuple[str, bool, OxmlElement]]]:
     """
-    Tách chính xác mọi phương án A., B., C., D. (Phần I) hoặc a), b), c), d) (Phần II)
-    nằm trên cùng một đoạn văn `<w:p>`, kể cả khi:
-    - Chữ cái nhãn và dấu chấm nằm ở 2 hoặc 3 thẻ `<w:r>` khác nhau (ví dụ: `<w:r><u>D</u></w:r><w:r>.</w:r>`).
-    - Phương án trước kết thúc bằng công thức `<m:oMath>` (ví dụ phân số căn thức ở Câu 3) rồi đến `<w:tab/>` hoặc dấu cách rồi đến `B.`, `C.`, `D.`.
-    - Chỉ có 1 dấu cách giữa nội dung phương án trước và nhãn `B.`, `C.`, `D.` kế tiếp.
+    Tách các phương án A., B., C., D. (Phần I) hoặc a), b), c), d) (Phần II) trong một đoạn văn `<w:p>`:
+    - Bảo toàn 100% các thẻ `<w:r>` chứa công thức MathType (`<w:object>`), hình vẽ (`<w:drawing>`),
+      ký hiệu (`<w:sym>`) và các thẻ `<m:oMath>` ở mọi vị trí (kể cả đứng ngay đầu phương án!).
+    - Phân biệt chính xác nhãn phương án thật với tên điểm hình học / biến toán học ("điểm B.", "cạnh b.")
+      nằm giữa câu văn.
     """
     if part == 1:
         start_check_re = re.compile(r"^\s*(\*?)\s*([A-D])\s*[\.\:\)]\s*", re.DOTALL)
-        opt_prefix_re = re.compile(r"^(\s*\*?\s*([A-D])\s*[\.\:\)]\s*)")
+        opt_prefix_re = re.compile(r"^(\s*\*?\s*([A-D])\s*([\.\:\)])\s*)")
         valid_seq = ["A", "B", "C", "D"]
     else:
         start_check_re = re.compile(r"^\s*(\*?)\s*([a-d])\s*[\)\.]\s*", re.DOTALL)
-        opt_prefix_re = re.compile(r"^(\s*\*?\s*([a-d])\s*[\)\.]\s*)")
+        opt_prefix_re = re.compile(r"^(\s*\*?\s*([a-d])\s*([\)\.])\s*)")
         valid_seq = ["a", "b", "c", "d"]
 
     raw_text = get_paragraph_text(p_elem)
@@ -333,35 +383,51 @@ def split_inline_options_in_paragraph(
         return None
 
     pPr = p_elem.find(qn("w:pPr"))
-    children = _split_runs_at_char_offsets(p_elem)
+    children = _split_runs_at_char_offsets(p_elem, part=part)
 
     segments: List[Tuple[str, bool, List[OxmlElement]]] = []
     current_label: Optional[str] = None
     current_correct: bool = False
     current_nodes: List[OxmlElement] = []
 
-    # Cờ cho biết vị trí hiện tại đủ điều kiện bắt đầu một nhãn phương án mới:
-    # Đầu dòng, sau <w:tab/>, sau công thức <m:oMath>, sau khoảng trắng, hoặc sau dấu chấm kết thúc câu.
-    can_start_option = True
+    # Cờ đánh dấu loại phân cách đứng ngay trước vị trí hiện tại:
+    # - is_line_start: đầu dòng <w:p>
+    # - after_strong_sep: sau <w:tab/>, sau >= 2 khoảng trắng, hoặc sau công thức <m:oMath>/<w:object>
+    # - after_any_space: sau ít nhất 1 khoảng trắng
+    is_line_start = True
+    after_strong_sep = True
+    after_any_space = True
 
     i = 0
     n = len(children)
     while i < n:
         node = children[i]
 
-        # Nếu là tab run -> bỏ qua tab và bật cờ can_start_option
-        if node.tag == qn("w:r") and node.find(qn("w:tab")) is not None and not node.findall(qn("w:t")):
-            can_start_option = True
+        # 1. Nếu là Tab run -> bật cờ after_strong_sep
+        if node.tag == qn("w:r") and node.find(qn("w:tab")) is not None and not node.findall(qn("w:t")) and not run_has_non_text_media(node):
+            after_strong_sep = True
+            after_any_space = True
             i += 1
             continue
 
+        # 2. Nếu là <w:r> chứa công thức MathType (<w:object>), hình vẽ (<w:drawing>, <w:pict>), <w:sym>
+        if node.tag == qn("w:r") and run_has_non_text_media(node):
+            node_copy = copy.deepcopy(node)
+            remove_underline_from_run(node_copy)
+            current_nodes.append(node_copy)
+            is_line_start = False
+            after_strong_sep = True
+            after_any_space = True
+            i += 1
+            continue
+
+        # 3. Nếu là <w:r> chứa văn bản <w:t>
         if node.tag == qn("w:r"):
-            # Ghép thử text của tối đa 3 run liên tiếp (để bắt trường hợp '*' + 'D' + '.' nằm ở 3 run rời nhau)
             lookahead_runs: List[Tuple[int, OxmlElement, str]] = []
             j = i
             while j < n and len(lookahead_runs) < 3:
                 cand = children[j]
-                if cand.tag != qn("w:r") or cand.find(qn("w:tab")) is not None:
+                if cand.tag != qn("w:r") or cand.find(qn("w:tab")) is not None or run_has_non_text_media(cand):
                     break
                 t_list = cand.findall(qn("w:t"))
                 if not t_list:
@@ -374,15 +440,16 @@ def split_inline_options_in_paragraph(
             m_opt = opt_prefix_re.match(combined_txt) if lookahead_runs else None
 
             if m_opt:
+                matched_prefix = m_opt.group(1)
                 cand_raw_label = m_opt.group(2)
+                punct_char = m_opt.group(3)  # '.', ':', hoặc ')'
                 cand_label = cand_raw_label.upper() if part == 1 else cand_raw_label.lower()
 
-                # Kiểm tra tính hợp lệ của nhãn kế tiếp để không cắt nhầm tên điểm hình học (ví dụ "A. B." trong "AB, AD")
+                # Kiểm tra thứ tự nhãn A -> B -> C -> D (hoặc a -> b -> c -> d)
                 is_expected_label = False
                 if current_label is None:
                     is_expected_label = cand_label in valid_seq
                 else:
-                    # Nhãn mới trên cùng 1 dòng phải đứng sau nhãn hiện tại theo thứ tự A -> B -> C -> D
                     try:
                         curr_idx = valid_seq.index(current_label)
                         cand_idx = valid_seq.index(cand_label)
@@ -390,16 +457,42 @@ def split_inline_options_in_paragraph(
                     except ValueError:
                         is_expected_label = False
 
-                if is_expected_label and (can_start_option or combined_txt.startswith((" ", "\t"))):
+                # Kiểm tra xem các run tạo nên nhãn này có được in đậm (<w:b>), gạch chân (<w:u>) hay có dấu '*' không
+                prefix_len = len(matched_prefix)
+                has_ast = "*" in matched_prefix
+                label_is_bold = False
+                label_is_ul = False
+                c_pos = 0
+                for _, r_cand, r_txt in lookahead_runs:
+                    if c_pos >= prefix_len:
+                        break
+                    overlap = r_txt[: max(0, prefix_len - c_pos)]
+                    c_pos += len(r_txt)
+                    if overlap.strip():
+                        if is_run_underlined(r_cand, p_elem):
+                            label_is_ul = True
+                        if is_run_bold(r_cand, p_elem):
+                            label_is_bold = True
+
+                # Điều kiện chặt chẽ để công nhận đây là NHÃN PHƯƠNG ÁN THẬT (chứ không phải chữ "điểm B." hay "cạnh b."):
+                # - Nếu ở đầu dòng (is_line_start): luôn là nhãn phương án.
+                # - Nếu ở giữa dòng: phải đứng sau phân cách mạnh (Tab, >=2 dấu cách, công thức),
+                #   HOẶC đứng sau dấu cách và bản thân nhãn được In Đậm / Gạch Chân / có dấu '*' / dùng dấu ngoặc ')'.
+                leading_spaces = len(matched_prefix) - len(matched_prefix.lstrip(" \t"))
+                is_genuine_option_marker = (
+                    is_line_start
+                    or after_strong_sep
+                    or (leading_spaces >= 2)
+                    or (
+                        (after_any_space or leading_spaces >= 1)
+                        and (label_is_bold or label_is_ul or has_ast or punct_char == ")")
+                    )
+                )
+
+                if is_expected_label and is_genuine_option_marker:
                     if current_label is not None:
                         segments.append((current_label, current_correct, current_nodes))
 
-                    matched_prefix = m_opt.group(1)
-                    prefix_len = len(matched_prefix)
-                    has_ast = "*" in matched_prefix
-                    is_ul = False
-
-                    # Duyệt qua các run trong lookahead_runs tham gia tạo nên matched_prefix (cả chữ cái và dấu chấm)
                     consumed_chars = 0
                     advance_count = 0
                     leftover_run: Optional[OxmlElement] = None
@@ -412,55 +505,68 @@ def split_inline_options_in_paragraph(
                         consumed_chars = r_end
                         advance_count += 1
 
-                        # Nếu run này chứa ký tự thuộc prefix (không chỉ là khoảng trắng) và có gạch chân -> Đáp án đúng!
-                        overlap_slice = r_txt[: max(0, prefix_len - r_start)]
-                        if overlap_slice.strip() and is_run_underlined(r_cand, p_elem):
-                            is_ul = True
-
-                        # Nếu run này vẫn còn phần văn bản dư sau prefix (ví dụ "<w:r><u>A.</u> 50600</w:r>")
                         if r_end > prefix_len:
                             offset = prefix_len - r_start
                             rem_str = r_txt[offset:].lstrip(" \t")
                             if rem_str:
                                 leftover_run = copy.deepcopy(r_cand)
-                                # Xóa gạch chân ở phần nội dung dư ra để không bị sót gạch chân
                                 remove_underline_from_run(leftover_run)
                                 for idx_t, t_el in enumerate(leftover_run.findall(qn("w:t"))):
                                     t_el.text = rem_str if idx_t == 0 else ""
                                     t_el.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
 
                     current_label = cand_label
-                    current_correct = has_ast or is_ul
+                    current_correct = has_ast or label_is_ul
                     current_nodes = []
+                    is_line_start = False
+
                     if leftover_run is not None:
                         current_nodes.append(leftover_run)
-                        leftover_txt = "".join((t.text or "") for t in leftover_run.findall(qn("w:t")))
-                        can_start_option = leftover_txt.endswith((" ", "\t", "."))
+                        l_txt = "".join((t.text or "") for t in leftover_run.findall(qn("w:t")))
+                        after_strong_sep = bool(re.search(r"(\t|\s{2,})$", l_txt))
+                        after_any_space = bool(re.search(r"[\s\.\;\,]$", l_txt))
                     else:
-                        can_start_option = False
+                        after_strong_sep = False
+                        after_any_space = True
 
                     i += max(1, advance_count)
                     continue
 
-            # Nếu không phải điểm bắt đầu phương án mới -> thêm vào phương án hiện tại
+            # Không phải nhãn phương án mới -> đưa vào nội dung của phương án hiện tại
             txt_curr = "".join((t.text or "") for t in node.findall(qn("w:t")))
             if not current_nodes and not txt_curr.strip():
-                # Bỏ khoảng trắng thừa ngay sau nhãn phương án và xóa gạch chân nếu có
+                # Khoảng trắng thừa ngay sau nhãn phương án
+                if len(txt_curr) >= 2 or "\t" in txt_curr:
+                    after_strong_sep = True
+                after_any_space = True
+                i += 1
+                continue
+
+            # Nếu đây là một run chỉ toàn khoảng trắng nằm giữa các phần tử của phương án
+            if not txt_curr.strip():
+                if len(txt_curr) >= 2 or "\t" in txt_curr:
+                    after_strong_sep = True
+                after_any_space = True
+                node_copy = copy.deepcopy(node)
+                remove_underline_from_run(node_copy)
+                current_nodes.append(node_copy)
                 i += 1
                 continue
 
             node_copy = copy.deepcopy(node)
-            # Nếu run đầu tiên của phương án chỉ là khoảng trắng hoặc dấu chấm thừa có gạch chân -> xóa gạch chân
             if not current_nodes and is_run_underlined(node_copy):
                 remove_underline_from_run(node_copy)
             current_nodes.append(node_copy)
-            can_start_option = bool(re.search(r"[\s\.\;\,]$", txt_curr))
+            is_line_start = False
+            after_strong_sep = bool(re.search(r"(\t|\s{2,})$", txt_curr))
+            after_any_space = bool(re.search(r"[\s\.\;\,]$", txt_curr))
             i += 1
         else:
-            # Công thức toán <m:oMath>, <m:oMathPara>, hình ảnh <w:drawing>, <w:object>...
+            # Các phần tử cấp đoạn văn khác như <m:oMath>, <m:oMathPara>, <w:hyperlink>, <w:smartTag>...
             current_nodes.append(copy.deepcopy(node))
-            # Ngay sau một công thức toán hoặc hình ảnh, phương án tiếp theo (B., C., D.) có thể xuất hiện ngay
-            can_start_option = True
+            is_line_start = False
+            after_strong_sep = True
+            after_any_space = True
             i += 1
 
     if current_label is not None:
@@ -486,7 +592,7 @@ def split_inline_options_in_paragraph(
 
 def prepend_bold_label_to_paragraph(p_elem: OxmlElement, label_text: str, color_hex: Optional[str] = None) -> OxmlElement:
     """
-    Chèn một nhãn in đậm KHÔNG GẠCH CHÂN (ví dụ: 'Câu 1: ' hoặc 'A. ' hoặc 'a) ') vào đầu thẻ <w:p>
+    Chèn một nhãn in đậm KHÔNG GẠCH CHÂN (ví dụ: 'Câu 1. ' hoặc 'A. ' hoặc 'a) ') vào đầu thẻ <w:p>
     mà giữ nguyên toàn bộ công thức, hình ảnh và định dạng phần thân của <w:p>.
     """
     new_p = copy.deepcopy(p_elem)
@@ -497,7 +603,6 @@ def prepend_bold_label_to_paragraph(p_elem: OxmlElement, label_text: str, color_
     b_el = OxmlElement("w:b")
     rPr.append(b_el)
 
-    # Khẳng định rõ không gạch chân ở nhãn mới
     u_none = OxmlElement("w:u")
     u_none.set(qn("w:val"), "none")
     rPr.append(u_none)
@@ -631,6 +736,7 @@ def parse_docx_exam(docx_bytes: bytes) -> ParsedExam:
                 or len(child.findall(".//" + qn("m:oMath"))) > 0
                 or len(child.findall(".//" + qn("w:object"))) > 0
                 or len(child.findall(".//" + qn("w:pict"))) > 0
+                or len(child.findall(".//" + qn("w:sym"))) > 0
             )
             if not text and not has_media:
                 continue
@@ -1195,7 +1301,7 @@ def generate_answer_key_excel(
     r_s3 = 2
     for part_key, part_label in [("part1", "Phần I"), ("part2", "Phần II"), ("part3", "Phần III")]:
         count_q = len(variants[0].question_mapping[part_key]) if variants else 0
-        for q_i in(range(count_q)):
+        for q_i in range(count_q):
             ws3.cell(r_s3, 1, part_label).alignment = align_center
             ws3.cell(r_s3, 2, f"Câu {q_i + 1}").alignment = align_center
             ws3.cell(r_s3, 1).font = font_cell
