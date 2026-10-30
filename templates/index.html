@@ -60,10 +60,10 @@
       <!-- Navigation Tabs -->
       <nav class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
         <button type="button" id="tabBtnWorkspace" data-tab="workspace" class="tab-nav-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-white text-blue-700 shadow-sm">
-          Trộn Đề Ngay
+          TRỘN ĐỀ NGAY
         </button>
         <button type="button" id="tabBtnFormat" data-tab="format" class="tab-nav-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
-          Quy Ước Đề Gốc (.docx)
+          QUY ƯỚC ĐỀ GỐC (.docx)
         </button>
 		
 		
@@ -97,9 +97,8 @@
       <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-5 sm:p-6 text-white shadow-md flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div class="space-y-1.5 max-w-2xl">
           <div class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-200 bg-white/10 px-2.5 py-1 rounded-full">
-            <span>Cấu trúc mới Bộ GD&ĐT</span>
-            <span>•</span>
-            <span>Phần I (TN 4 lựa chọn) • Phần II (Đúng/Sai) • Phần III (Trả lời ngắn)</span>
+            <span></span>
+            <span><b>Cấu trúc mới Bộ GD&ĐT đề TNTHPT 2025 </b><br />Phần I (TN 4 lựa chọn) • Phần II (Đúng/Sai) • Phần III (Trả lời ngắn)</span>
           </div>
           <h2 class="text-lg sm:text-xl font-bold">Tải đề gốc Word (.docx) lên và nhận ngay gói .ZIP (Các mã đề Word + Bảng đáp án Excel)</h2>
           <p class="text-xs sm:text-sm text-blue-100/90 leading-relaxed">
@@ -108,10 +107,10 @@
         </div>
         <div class="flex flex-wrap items-center gap-2.5 shrink-0">
           <button type="button" id="btnLoadSampleToApp" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow transition flex items-center gap-2">
-            <span>⚡ Nạp Đề Mẫu Có Công Thức & Hình Vẽ Để Trộn Thử</span>
+            <span>⚡ Nạp đề mẫu có Công thức & Hình vẽ để trộn thử</span>
           </button>
           <button type="button" id="btnDownloadSampleDocx" class="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs sm:text-sm border border-white/20 transition">
-            ⬇ Tải File Đề Gốc Mẫu (.docx)
+            ⬇ Tải File đề gốc mẫu (.docx)
           </button>
         </div>
       </div>
@@ -127,7 +126,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2.5">
                 <span class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</span>
-                <h3 class="font-bold text-slate-900 text-sm sm:text-base">Tải Lên Đề Gốc Word (.docx)</h3>
+                <h3 class="font-bold text-slate-900 text-sm sm:text-base">TẢI LÊN ĐỀ GỐC(.docx)</h3>
               </div>
               <span id="fileStatusBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
                 Chưa chọn file
@@ -176,7 +175,7 @@
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
             <div class="flex items-center gap-2.5">
               <span class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center">2</span>
-              <h3 class="font-bold text-slate-900 text-sm sm:text-base">Cấu Hình Mã Đề & Tiêu Đề Kỳ Thi</h3>
+              <h3 class="font-bold text-slate-900 text-sm sm:text-base">CẤU HÌNH MÃ ĐỀ & TIÊU ĐỀ KỲ THI</h3>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -257,7 +256,7 @@
 
             <!-- Execute Shuffle Button -->
             <button type="button" id="btnRunShuffle" class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
-              <span>🔀 Thực Hiện Trộn Đề & Xuất File .ZIP Ngay</span>
+              <span>🔀 THỰC HIỆN TRỘN ĐỀ & XUẤT FILE .ZIP</span>
             </button>
           </div>
         </div>
@@ -286,10 +285,10 @@
             <!-- Sub-tabs inside Right Panel: [Nhận diện đề gốc] vs [Bảng đáp án sau trộn] -->
             <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
               <button type="button" id="subTabBtnParsed" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                Danh Sách Câu Hỏi & Đáp Án Gốc Nhận Diện Được
+                DANH SÁCH CÂU HỎI & ĐÁP ÁN GỐC NHẬN DIỆN ĐƯỢC
               </button>
               <button type="button" id="subTabBtnMatrix" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100">
-                Bảng Đáp Án Các Mã Đề Đã Trộn (.xlsx preview)
+                BẢNG ĐÁP ÁN CÁC MÃ ĐỀ ĐÃ TRỘN (.xlsx)
               </button>
             </div>
 
@@ -303,7 +302,7 @@
             <!-- View 3B: Shuffled Answer Key Matrix -->
             <div id="viewShuffledMatrix" class="hidden space-y-4 max-h-[540px] overflow-y-auto custom-scrollbar pr-1">
               <div class="text-center py-12 text-slate-400 text-sm">
-                Hãy bấm nút <strong>"🔀 Thực Hiện Trộn Đề & Xuất File .ZIP Ngay"</strong> để sinh các mã đề và bảng đáp án.
+                Hãy bấm nút <strong>"🔀 THỰC HIỆN TRỘN ĐỀ & XUẤT FILE .ZIP"</strong> để sinh các mã đề và bảng đáp án.
               </div>
             </div>
           </div>
@@ -3081,10 +3080,8 @@
   
 
 
-
 <!-- Chống View Code HTML -->
-
-
+	
 <script>
     // 1. Chặn nhấp chuột phải
     document.addEventListener('contextmenu', function(e) {
@@ -3120,11 +3117,6 @@
         debugger;
     }, 100);
 </script>
-
-
-
-
-
 
 
   
