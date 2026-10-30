@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 Module lõi Trộn Đề Trắc Nghiệm Chuẩn GDPT 2018 (3 Phần: TNKQ 4 lựa chọn, Đúng/Sai, Trả lời ngắn).
-Phiên bản v2.2 - Đã khắc phục triệt để lỗi mất nội dung phương án ở cả Phần I và Phần II:
-1. Bảo toàn 100% thẻ <w:r> chứa công thức MathType OLE (<w:object>), hình ảnh (<w:drawing>, <w:pict>),
-   ký tự đặc biệt (<w:sym>) ngay ở đầu phương án (không có thẻ <w:t> nên bản cũ tưởng nhầm là run rỗng và bỏ qua).
-2. Chống cắt nhầm câu khi trong nội dung mệnh đề có tên điểm/biến kết thúc bằng dấu chấm như
-   "điểm B.", "cạnh b.", "mặt phẳng (P).": chỉ nhận diện nhãn phương án nằm giữa dòng khi đứng sau phím Tab,
-   >= 2 dấu cách, hoặc nhãn đó được định dạng In Đậm (<w:b>) / Gạch Chân (<w:u>) / có dấu *.
-3. Hỗ trợ trường hợp phương án A. hoặc câu hỏi nằm nối tiếp ngay trên cùng dòng thân câu hỏi.
+Phiên bản v2.4 (nâng cấp từ v2.2):
+1. Bảo toàn tuyệt đối 100% công thức MathType OLE (<w:object>, <w:pict>, Word Field EMBED Equation.DSMT4),
+   Word Equation (<m:oMath>, <m:oMathPara>), hình vẽ (<w:drawing>), ký hiệu (<w:sym>) ở cả thân câu hỏi
+   lẫn trong tất cả các phương án A, B, C, D và a), b), c), d).
+2. Khi một dòng <w:p> chỉ chứa 1 phương án đơn lẻ, sử dụng cơ chế cắt nhãn tại chỗ (in-place clone)
+   giống hệt phần thân câu hỏi để không bao giờ tháo rời các thẻ <w:r>.
+3. Khi một dòng <w:p> chứa nhiều phương án nối tiếp (A. ... B. ... C. ... D. ...), bảo vệ nguyên vẹn
+   các trường Word phức hợp (<w:fldChar> begin..end) và không bao giờ bỏ qua bất kỳ thẻ <w:r> nào.
 4. Xóa sạch 100% gạch chân ở nhãn phương án sau khi trộn.
 """
 
@@ -33,6 +34,7 @@ from openpyxl.utils import get_column_letter
 
 
 W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+M_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math"
 
 
 @dataclass
@@ -84,13 +86,24 @@ def get_paragraph_text(p_elem: OxmlElement) -> str:
 def run_has_non_text_media(r_elem: OxmlElement) -> bool:
     """
     Kiểm tra xem thẻ <w:r> có chứa đối tượng công thức MathType (<w:object>),
-    hình vẽ (<w:drawing>, <w:pict>), ký hiệu (<w:sym>), hay công thức toán không.
-    Rất quan trọng: Nếu có, tuyệt đối KHÔNG ĐƯỢC coi run này là rỗng!
+    hình vẽ (<w:drawing>, <w:pict>), ký hiệu (<w:sym>), trường công thức (<w:fldChar>, <w:instrText>)
+    hay phần tử phi văn bản nào khác không.
     """
     for sub in r_elem:
         if sub.tag not in (qn("w:rPr"), qn("w:t"), qn("w:tab")):
             return True
     return False
+
+
+def get_run_fld_char_types(r_elem: OxmlElement) -> List[str]:
+    """Lấy danh sách các giá trị w:fldCharType ('begin', 'separate', 'end') trong một <w:r>."""
+    types: List[str] = []
+    for sub in r_elem:
+        if sub.tag == qn("w:fldChar"):
+            val = sub.get(qn("w:fldCharType")) or sub.get("fldCharType") or ""
+            if val:
+                types.append(val.lower())
+    return types
 
 
 def is_rPr_underlined(rPr: Optional[OxmlElement]) -> bool:
@@ -164,7 +177,7 @@ def remove_underline_from_paragraph_pPr(p_elem: OxmlElement) -> None:
 def clean_option_paragraph_underlines(p_elem: OxmlElement) -> None:
     """
     Xóa triệt để gạch chân còn sót lại ở đầu phương án (dấu chấm '.', dấu ')', khoảng trắng),
-    đồng thời bảo toàn mọi đối tượng công thức/hình ảnh.
+    đồng thời bảo toàn nguyên vẹn mọi đối tượng công thức MathType / Equation / hình ảnh.
     """
     remove_underline_from_paragraph_pPr(p_elem)
     direct_runs = [c for c in p_elem if c.tag == qn("w:r")]
@@ -181,43 +194,68 @@ def clean_option_paragraph_underlines(p_elem: OxmlElement) -> None:
         return
 
     seen_meaningful_content = False
-    for r in direct_runs:
-        if run_has_non_text_media(r):
-            remove_underline_from_run(r)
+    for child in p_elem:
+        if child.tag == qn("w:pPr"):
+            continue
+        if child.tag != qn("w:r"):
             seen_meaningful_content = True
             continue
-        txt = "".join((t.text or "") for t in r.findall(qn("w:t")))
+        if run_has_non_text_media(child):
+            remove_underline_from_run(child)
+            seen_meaningful_content = True
+            continue
+        txt = "".join((t.text or "") for t in child.findall(qn("w:t")))
         stripped = txt.strip()
         if not stripped:
-            remove_underline_from_run(r)
+            remove_underline_from_run(child)
             continue
         if not seen_meaningful_content:
             if re.fullmatch(r"[\.\:\)\-\s]+", stripped):
-                remove_underline_from_run(r)
+                remove_underline_from_run(child)
                 continue
-            if re.match(r"^[\.\:\)]\s*", stripped) and is_run_underlined(r):
-                remove_underline_from_run(r)
+            if re.match(r"^[\.\:\)]\s*", stripped) and is_run_underlined(child):
+                remove_underline_from_run(child)
             seen_meaningful_content = True
 
 
 def strip_prefix_from_paragraph(p_elem: OxmlElement, regex_pattern: str) -> Tuple[OxmlElement, bool, str]:
     """
     Sao chép thẻ <w:p>, kiểm tra và cắt bỏ phần nhãn đầu câu/đáp án khớp với `regex_pattern`
-    (ví dụ: 'Câu 12: ', 'Câu 1. ', 'A. ', '*A. ', 'a) '), đồng thời kiểm tra xem phần nhãn
-    có được gạch chân hay đánh dấu * hay không.
-    Bảo toàn 100% các node công thức/hình ảnh (<w:object>, <w:drawing>, <m:oMath>).
+    (ví dụ: 'Câu 12: ', 'Câu 1. ', 'A. ', '*A. ', 'a) ') ngay tại chỗ (in-place),
+    đồng thời kiểm tra xem phần nhãn có được gạch chân hay đánh dấu * hay không.
+    Dừng thu thập văn bản đầu dòng ngay khi gặp công thức (<w:object>, <w:pict>, <m:oMath>)
+    hoặc hình vẽ (<w:drawing>) để bảo toàn 100% mọi công thức và văn bản phía sau.
     """
     new_p = copy.deepcopy(p_elem)
     remove_underline_from_paragraph_pPr(new_p)
 
     t_nodes: List[Tuple[OxmlElement, OxmlElement, str]] = []
     for child in new_p:
-        if child.tag == qn("w:r"):
-            for sub in child:
-                if sub.tag == qn("w:t") and sub.text:
-                    t_nodes.append((child, sub, sub.text))
-                elif sub.tag == qn("w:tab"):
-                    t_nodes.append((child, sub, "\t"))
+        if child.tag == qn("w:pPr"):
+            continue
+        if child.tag != qn("w:r"):
+            # Gặp <m:oMath>, <m:oMathPara>, <mc:AlternateContent>, <w:fldSimple>... -> dừng ngay
+            break
+        stop_here = False
+        for sub in child:
+            if sub.tag == qn("w:rPr"):
+                continue
+            if sub.tag == qn("w:t") and sub.text:
+                t_nodes.append((child, sub, sub.text))
+            elif sub.tag == qn("w:tab"):
+                t_nodes.append((child, sub, "\t"))
+            elif sub.tag in (
+                qn("w:object"),
+                qn("w:pict"),
+                qn("w:drawing"),
+                qn("w:sym"),
+                qn("w:fldChar"),
+                qn("w:instrText"),
+            ):
+                stop_here = True
+                break
+        if stop_here:
+            break
 
     full_text = "".join(item[2] for item in t_nodes)
     match = re.match(regex_pattern, full_text, flags=re.IGNORECASE)
@@ -261,21 +299,41 @@ def strip_prefix_from_paragraph(p_elem: OxmlElement, regex_pattern: str) -> Tupl
 
 def _split_runs_at_char_offsets(p_elem: OxmlElement, part: int = 1) -> List[OxmlElement]:
     """
-    Chuẩn hóa danh sách các phần tử con trong <w:p>:
-    - Tách mỗi sub-element trong <w:r> (<w:t>, <w:tab>, <w:object>, <w:drawing>, <w:pict>, <w:sym>)
-      thành một thẻ <w:r> độc lập có giữ nguyên <w:rPr> (để không bao giờ làm rơi <w:object> hay <w:drawing>).
-    - Đối với <w:t> chứa nhiều phương án gõ liền nhau bằng khoảng trắng:
-      + Nếu cách nhau bởi >= 2 khoảng trắng (hoặc Tab): luôn tách trước nhãn A., B., C., D. / a), b), c), d).
-      + Nếu chỉ cách nhau bởi 1 khoảng trắng: chỉ tách nếu chính run đó đang được In Đậm (<w:b>) hoặc Gạch Chân (<w:u>)
-        hoặc có dấu `*` hoặc dấu `)` (đối với Phần II: `a)`, `b)`, `c)`, `d)`), nhằm tránh cắt nhầm chữ
-        "điểm B.", "cạnh b." trong văn bản bình thường!
+    Chuẩn hóa danh sách các phần tử con trong <w:p> để phục vụ tách nhiều phương án trên cùng 1 dòng:
+    - Bảo vệ nguyên vẹn các trường Word phức hợp (<w:fldChar> begin ... end, như EMBED Equation.DSMT4).
+    - Nếu một <w:r> chỉ chứa công thức MathType (<w:object>, <w:pict>), hình ảnh (<w:drawing>) mà không có
+      <w:t> hay <w:tab>, giữ nguyên bản sao <w:r> gốc (copy.deepcopy(child)).
+    - Chỉ tách <w:t> khi bên trong <w:t> thực sự có ranh giới nhãn phương án nối tiếp (A., B., C., D. / a), b), c), d)).
     """
     expanded: List[OxmlElement] = []
+    field_depth = 0
 
     for child in p_elem:
         if child.tag == qn("w:pPr"):
             continue
         if child.tag != qn("w:r"):
+            expanded.append(copy.deepcopy(child))
+            continue
+
+        fld_types = get_run_fld_char_types(child)
+        was_in_field = field_depth > 0
+        for ft in fld_types:
+            if ft == "begin":
+                field_depth += 1
+            elif ft == "end":
+                field_depth = max(0, field_depth - 1)
+
+        # Nếu đang ở trong một Word Field (ví dụ EMBED Equation.DSMT4 hoặc EQ), giữ nguyên <w:r> 100%
+        if was_in_field or field_depth > 0 or fld_types or child.find(qn("w:instrText")) is not None:
+            expanded.append(copy.deepcopy(child))
+            continue
+
+        has_t = any(sub.tag == qn("w:t") for sub in child)
+        has_tab = any(sub.tag == qn("w:tab") for sub in child)
+
+        # Nếu <w:r> không có <w:t> và không có <w:tab> (ví dụ chỉ chứa <w:object>, <w:pict>, <w:drawing>, <w:sym>)
+        # -> Giữ nguyên toàn bộ thẻ <w:r> gốc mà không tháo rời!
+        if not has_t and not has_tab:
             expanded.append(copy.deepcopy(child))
             continue
 
@@ -285,20 +343,19 @@ def _split_runs_at_char_offsets(p_elem: OxmlElement, part: int = 1) -> List[Oxml
         for sub in child:
             if sub.tag == qn("w:rPr"):
                 continue
-            if sub.tag == qn("w:t") and sub.text:
-                raw_txt = sub.text
-                # Chọn biểu thức tách bên trong 1 <w:t> an toàn:
+            if sub.tag == qn("w:t"):
+                raw_txt = sub.text or ""
+                if not raw_txt:
+                    continue
                 if part == 1:
                     if run_styled:
                         inline_re = re.compile(r"(\s+)(\*?\s*[A-D]\s*[\.\:\)]\s*)")
                     else:
-                        # Trong run chữ thường: phải có >= 2 dấu cách hoặc dấu * trước A., B., C., D.
                         inline_re = re.compile(r"(\s{2,}|\s+(?=\*))(\*?\s*[A-D]\s*[\.\:\)]\s*)")
                 else:
                     if run_styled:
                         inline_re = re.compile(r"(\s+)(\*?\s*[a-d]\s*[\)\.]\s*)")
                     else:
-                        # Trong run chữ thường Phần II: chấp nhận a), b), c), d) (dấu ngoặc đơn) hoặc >= 2 dấu cách trước a.
                         inline_re = re.compile(r"(\s+)(\*?\s*[a-d]\s*\)\s*)|(\s{2,})(\*?\s*[a-d]\s*\.\s*)")
 
                 pos = 0
@@ -319,7 +376,6 @@ def _split_runs_at_char_offsets(p_elem: OxmlElement, part: int = 1) -> List[Oxml
                         expanded.append(r1)
 
                     r_sep = OxmlElement("w:r")
-                    # Đánh dấu nếu khoảng trắng phân cách >= 2 ký tự
                     t_sep = OxmlElement("w:t")
                     t_sep.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
                     t_sep.text = sep_space
@@ -348,7 +404,6 @@ def _split_runs_at_char_offsets(p_elem: OxmlElement, part: int = 1) -> List[Oxml
                     r_rem.append(t_rem)
                     expanded.append(r_rem)
             else:
-                # Bảo toàn nguyên vẹn <w:object> (MathType), <w:drawing>, <w:pict>, <w:sym>, <w:tab>
                 new_r = OxmlElement("w:r")
                 if rPr is not None:
                     new_r.append(copy.deepcopy(rPr))
@@ -364,22 +419,25 @@ def split_inline_options_in_paragraph(
 ) -> Optional[List[Tuple[str, bool, OxmlElement]]]:
     """
     Tách các phương án A., B., C., D. (Phần I) hoặc a), b), c), d) (Phần II) trong một đoạn văn `<w:p>`:
-    - Bảo toàn 100% các thẻ `<w:r>` chứa công thức MathType (`<w:object>`), hình vẽ (`<w:drawing>`),
-      ký hiệu (`<w:sym>`) và các thẻ `<m:oMath>` ở mọi vị trí (kể cả đứng ngay đầu phương án!).
-    - Phân biệt chính xác nhãn phương án thật với tên điểm hình học / biến toán học ("điểm B.", "cạnh b.")
-      nằm giữa câu văn.
+    - Nếu đoạn văn chỉ chứa 1 phương án duy nhất: dùng ngay `strip_prefix_from_paragraph` (giống hệt cách
+      xử lý thân câu hỏi) để giữ nguyên 100% cấu trúc `<w:p>` và mọi công thức MathType/Equation.
+    - Nếu đoạn văn chứa nhiều phương án trên cùng 1 dòng: tách chính xác tại các nhãn phương án,
+      bảo vệ các trường `<w:fldChar>` và không bao giờ làm rơi bất kỳ `<w:r>` hay `<w:object>` nào.
     """
     if part == 1:
         start_check_re = re.compile(r"^\s*(\*?)\s*([A-D])\s*[\.\:\)]\s*", re.DOTALL)
         opt_prefix_re = re.compile(r"^(\s*\*?\s*([A-D])\s*([\.\:\)])\s*)")
+        single_strip_re = r"^\s*\*?\s*(?P<label>[A-D])\s*[\.\:\)]\s*"
         valid_seq = ["A", "B", "C", "D"]
     else:
         start_check_re = re.compile(r"^\s*(\*?)\s*([a-d])\s*[\)\.]\s*", re.DOTALL)
         opt_prefix_re = re.compile(r"^(\s*\*?\s*([a-d])\s*([\)\.])\s*)")
+        single_strip_re = r"^\s*\*?\s*(?P<label>[a-d])\s*[\)\.]\s*"
         valid_seq = ["a", "b", "c", "d"]
 
-    raw_text = get_paragraph_text(p_elem)
-    if not start_check_re.match(raw_text):
+    # Kiểm tra bằng strip_prefix_from_paragraph để đảm bảo nhãn nằm trước công thức đầu tiên
+    test_p, test_corr, test_lbl = strip_prefix_from_paragraph(p_elem, single_strip_re)
+    if not test_lbl:
         return None
 
     pPr = p_elem.find(qn("w:pPr"))
@@ -390,18 +448,34 @@ def split_inline_options_in_paragraph(
     current_correct: bool = False
     current_nodes: List[OxmlElement] = []
 
-    # Cờ đánh dấu loại phân cách đứng ngay trước vị trí hiện tại:
-    # - is_line_start: đầu dòng <w:p>
-    # - after_strong_sep: sau <w:tab/>, sau >= 2 khoảng trắng, hoặc sau công thức <m:oMath>/<w:object>
-    # - after_any_space: sau ít nhất 1 khoảng trắng
     is_line_start = True
     after_strong_sep = True
     after_any_space = True
+    field_depth = 0
 
     i = 0
     n = len(children)
     while i < n:
         node = children[i]
+
+        # Theo dõi trạng thái bên trong Word Complex Field (<w:fldChar> begin ... end)
+        if node.tag == qn("w:r"):
+            fld_types = get_run_fld_char_types(node)
+            was_in_field = field_depth > 0
+            for ft in fld_types:
+                if ft == "begin":
+                    field_depth += 1
+                elif ft == "end":
+                    field_depth = max(0, field_depth - 1)
+            if was_in_field or field_depth > 0 or fld_types or node.find(qn("w:instrText")) is not None:
+                node_copy = copy.deepcopy(node)
+                remove_underline_from_run(node_copy)
+                current_nodes.append(node_copy)
+                is_line_start = False
+                after_strong_sep = False
+                after_any_space = False
+                i += 1
+                continue
 
         # 1. Nếu là Tab run -> bật cờ after_strong_sep
         if node.tag == qn("w:r") and node.find(qn("w:tab")) is not None and not node.findall(qn("w:t")) and not run_has_non_text_media(node):
@@ -416,8 +490,9 @@ def split_inline_options_in_paragraph(
             remove_underline_from_run(node_copy)
             current_nodes.append(node_copy)
             is_line_start = False
-            after_strong_sep = True
-            after_any_space = True
+            # Không bật after_strong_sep sau công thức để tránh cắt nhầm chữ cái ngay sau công thức
+            after_strong_sep = False
+            after_any_space = False
             i += 1
             continue
 
@@ -433,6 +508,8 @@ def split_inline_options_in_paragraph(
                 if not t_list:
                     break
                 txt_j = "".join((t.text or "") for t in t_list)
+                if not txt_j:
+                    break
                 lookahead_runs.append((j, cand, txt_j))
                 j += 1
 
@@ -442,10 +519,9 @@ def split_inline_options_in_paragraph(
             if m_opt:
                 matched_prefix = m_opt.group(1)
                 cand_raw_label = m_opt.group(2)
-                punct_char = m_opt.group(3)  # '.', ':', hoặc ')'
+                punct_char = m_opt.group(3)
                 cand_label = cand_raw_label.upper() if part == 1 else cand_raw_label.lower()
 
-                # Kiểm tra thứ tự nhãn A -> B -> C -> D (hoặc a -> b -> c -> d)
                 is_expected_label = False
                 if current_label is None:
                     is_expected_label = cand_label in valid_seq
@@ -457,7 +533,6 @@ def split_inline_options_in_paragraph(
                     except ValueError:
                         is_expected_label = False
 
-                # Kiểm tra xem các run tạo nên nhãn này có được in đậm (<w:b>), gạch chân (<w:u>) hay có dấu '*' không
                 prefix_len = len(matched_prefix)
                 has_ast = "*" in matched_prefix
                 label_is_bold = False
@@ -474,10 +549,6 @@ def split_inline_options_in_paragraph(
                         if is_run_bold(r_cand, p_elem):
                             label_is_bold = True
 
-                # Điều kiện chặt chẽ để công nhận đây là NHÃN PHƯƠNG ÁN THẬT (chứ không phải chữ "điểm B." hay "cạnh b."):
-                # - Nếu ở đầu dòng (is_line_start): luôn là nhãn phương án.
-                # - Nếu ở giữa dòng: phải đứng sau phân cách mạnh (Tab, >=2 dấu cách, công thức),
-                #   HOẶC đứng sau dấu cách và bản thân nhãn được In Đậm / Gạch Chân / có dấu '*' / dùng dấu ngoặc ')'.
                 leading_spaces = len(matched_prefix) - len(matched_prefix.lstrip(" \t"))
                 is_genuine_option_marker = (
                     is_line_start
@@ -495,7 +566,7 @@ def split_inline_options_in_paragraph(
 
                     consumed_chars = 0
                     advance_count = 0
-                    leftover_run: Optional[OxmlElement] = None
+                    leftover_runs: List[OxmlElement] = []
 
                     for _, r_cand, r_txt in lookahead_runs:
                         if consumed_chars >= prefix_len:
@@ -508,21 +579,28 @@ def split_inline_options_in_paragraph(
                         if r_end > prefix_len:
                             offset = prefix_len - r_start
                             rem_str = r_txt[offset:].lstrip(" \t")
-                            if rem_str:
-                                leftover_run = copy.deepcopy(r_cand)
-                                remove_underline_from_run(leftover_run)
-                                for idx_t, t_el in enumerate(leftover_run.findall(qn("w:t"))):
+                            if rem_str or run_has_non_text_media(r_cand):
+                                l_run = copy.deepcopy(r_cand)
+                                remove_underline_from_run(l_run)
+                                for idx_t, t_el in enumerate(l_run.findall(qn("w:t"))):
                                     t_el.text = rem_str if idx_t == 0 else ""
                                     t_el.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+                                leftover_runs.append(l_run)
+                        elif run_has_non_text_media(r_cand):
+                            l_run = copy.deepcopy(r_cand)
+                            remove_underline_from_run(l_run)
+                            for t_el in l_run.findall(qn("w:t")):
+                                t_el.text = ""
+                            leftover_runs.append(l_run)
 
                     current_label = cand_label
                     current_correct = has_ast or label_is_ul
                     current_nodes = []
                     is_line_start = False
 
-                    if leftover_run is not None:
-                        current_nodes.append(leftover_run)
-                        l_txt = "".join((t.text or "") for t in leftover_run.findall(qn("w:t")))
+                    if leftover_runs:
+                        current_nodes.extend(leftover_runs)
+                        l_txt = "".join((t.text or "") for t in leftover_runs[-1].findall(qn("w:t")))
                         after_strong_sep = bool(re.search(r"(\t|\s{2,})$", l_txt))
                         after_any_space = bool(re.search(r"[\s\.\;\,]$", l_txt))
                     else:
@@ -534,39 +612,36 @@ def split_inline_options_in_paragraph(
 
             # Không phải nhãn phương án mới -> đưa vào nội dung của phương án hiện tại
             txt_curr = "".join((t.text or "") for t in node.findall(qn("w:t")))
-            if not current_nodes and not txt_curr.strip():
-                # Khoảng trắng thừa ngay sau nhãn phương án
-                if len(txt_curr) >= 2 or "\t" in txt_curr:
-                    after_strong_sep = True
-                after_any_space = True
-                i += 1
-                continue
-
-            # Nếu đây là một run chỉ toàn khoảng trắng nằm giữa các phần tử của phương án
             if not txt_curr.strip():
                 if len(txt_curr) >= 2 or "\t" in txt_curr:
                     after_strong_sep = True
                 after_any_space = True
-                node_copy = copy.deepcopy(node)
-                remove_underline_from_run(node_copy)
-                current_nodes.append(node_copy)
+                if current_nodes:
+                    node_copy = copy.deepcopy(node)
+                    remove_underline_from_run(node_copy)
+                    current_nodes.append(node_copy)
                 i += 1
                 continue
 
             node_copy = copy.deepcopy(node)
-            if not current_nodes and is_run_underlined(node_copy):
-                remove_underline_from_run(node_copy)
+            if not current_nodes:
+                if is_run_underlined(node_copy):
+                    remove_underline_from_run(node_copy)
+                t_els = node_copy.findall(qn("w:t"))
+                if t_els and t_els[0].text:
+                    t_els[0].text = t_els[0].text.lstrip(" \t")
+                    t_els[0].set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
             current_nodes.append(node_copy)
             is_line_start = False
             after_strong_sep = bool(re.search(r"(\t|\s{2,})$", txt_curr))
             after_any_space = bool(re.search(r"[\s\.\;\,]$", txt_curr))
             i += 1
         else:
-            # Các phần tử cấp đoạn văn khác như <m:oMath>, <m:oMathPara>, <w:hyperlink>, <w:smartTag>...
+            # Các phần tử cấp đoạn văn khác như <m:oMath>, <m:oMathPara>, <mc:AlternateContent>, <w:fldSimple>...
             current_nodes.append(copy.deepcopy(node))
             is_line_start = False
-            after_strong_sep = True
-            after_any_space = True
+            after_strong_sep = False
+            after_any_space = False
             i += 1
 
     if current_label is not None:
@@ -574,6 +649,12 @@ def split_inline_options_in_paragraph(
 
     if not segments:
         return None
+
+    # RẤT QUAN TRỌNG: Nếu cả đoạn <w:p> chỉ có đúng 1 phương án, trả về ngay bản cắt tại chỗ (in-place)
+    # từ `strip_prefix_from_paragraph` (giống hệt cách cắt nhãn "Câu 1." ở thân câu hỏi)!
+    if len(segments) == 1:
+        lbl0 = test_lbl.upper() if part == 1 else test_lbl.lower()
+        return [(lbl0, test_corr, test_p)]
 
     result: List[Tuple[str, bool, OxmlElement]] = []
     for lbl, is_corr, nodes in segments:
@@ -1154,206 +1235,165 @@ def generate_answer_key_excel(
         ws.row_dimensions[row_idx].height = 22
         return row_idx + 1
 
-    num_p1 = len(variants[0].part1_keys) if variants else 0
-    if num_p1 > 0:
+    # Bảng 1: Phần I
+    if variants and variants[0].part1_keys:
         row_cursor = write_table_header(
-            ws1,
-            row_cursor,
-            "PHẦN I: TRẮC NGHIỆM NHIỀU PHƯƠNG ÁN LỰA CHỌN",
+            ws1, row_cursor, "PHẦN I: TRẮC NGHIỆM NHIỀU PHƯƠNG ÁN LỰA CHỌN (A, B, C, D)"
         )
-        for q_i in range(num_p1):
-            c_lbl = ws1.cell(row_cursor, 1, f"Câu {q_i + 1}")
-            c_lbl.font = font_bold
-            c_lbl.border = border_all
-            c_lbl.alignment = align_center
+        num_q1 = len(variants[0].part1_keys)
+        for q_i in range(num_q1):
+            c_label = ws1.cell(row_cursor, 1, f"Câu {q_i + 1}")
+            c_label.font = font_bold
+            c_label.border = border_all
+            c_label.alignment = align_center
             if q_i % 2 == 1:
-                c_lbl.fill = fill_zebra
+                c_label.fill = fill_zebra
 
             for v_idx, v in enumerate(variants, start=2):
-                val = v.part1_keys[q_i] if q_i < len(v.part1_keys) else ""
-                c = ws1.cell(row_cursor, v_idx, val)
-                c.font = font_bold
-                c.border = border_all
-                c.alignment = align_center
+                ans_val = v.part1_keys[q_i] if q_i < len(v.part1_keys) else ""
+                c_val = ws1.cell(row_cursor, v_idx, ans_val)
+                c_val.font = font_bold
+                c_val.border = border_all
+                c_val.alignment = align_center
                 if q_i % 2 == 1:
-                    c.fill = fill_zebra
+                    c_val.fill = fill_zebra
             ws1.row_dimensions[row_cursor].height = 20
             row_cursor += 1
         row_cursor += 1
 
-    num_p2 = len(variants[0].part2_keys) if variants else 0
-    if num_p2 > 0:
+    # Bảng 2: Phần II (Đúng/Sai)
+    if variants and variants[0].part2_keys:
         row_cursor = write_table_header(
-            ws1,
-            row_cursor,
-            "PHẦN II: TRẮC NGHIỆM ĐÚNG / SAI (Thứ tự ý a - b - c - d)",
+            ws1, row_cursor, "PHẦN II: TRẮC NGHIỆM ĐÚNG / SAI (Đ: Đúng, S: Sai theo thứ tự a - b - c - d)"
         )
-        for q_i in range(num_p2):
-            for sub_letter in ["a", "b", "c", "d"]:
-                c_lbl = ws1.cell(row_cursor, 1, f"Câu {q_i + 1}.{sub_letter})")
-                c_lbl.font = font_cell
-                c_lbl.border = border_all
-                c_lbl.alignment = align_center
+        num_q2 = len(variants[0].part2_keys)
+        for q_i in range(num_q2):
+            for sub_idx, sub_letter in enumerate(["a", "b", "c", "d"]):
+                c_label = ws1.cell(row_cursor, 1, f"Câu {q_i + 1}.{sub_letter})")
+                c_label.font = font_cell
+                c_label.border = border_all
+                c_label.alignment = align_center
                 if q_i % 2 == 1:
-                    c_lbl.fill = fill_zebra
+                    c_label.fill = fill_zebra
 
                 for v_idx, v in enumerate(variants, start=2):
-                    val = v.part2_detail[q_i].get(sub_letter, "") if q_i < len(v.part2_detail) else ""
-                    c = ws1.cell(row_cursor, v_idx, val)
-                    c.font = font_bold
-                    c.border = border_all
-                    c.alignment = align_center
+                    detail_map = v.part2_detail[q_i] if q_i < len(v.part2_detail) else {}
+                    ans_val = detail_map.get(sub_letter, "")
+                    c_val = ws1.cell(row_cursor, v_idx, ans_val)
+                    c_val.font = font_bold
+                    c_val.border = border_all
+                    c_val.alignment = align_center
                     if q_i % 2 == 1:
-                        c.fill = fill_zebra
+                        c_val.fill = fill_zebra
                 ws1.row_dimensions[row_cursor].height = 19
                 row_cursor += 1
         row_cursor += 1
 
-    num_p3 = len(variants[0].part3_keys) if variants else 0
-    if num_p3 > 0:
+    # Bảng 3: Phần III (Trả lời ngắn)
+    if variants and variants[0].part3_keys:
         row_cursor = write_table_header(
-            ws1,
-            row_cursor,
-            "PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN",
+            ws1, row_cursor, "PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN"
         )
-        for q_i in range(num_p3):
-            c_lbl = ws1.cell(row_cursor, 1, f"Câu {q_i + 1}")
-            c_lbl.font = font_bold
-            c_lbl.border = border_all
-            c_lbl.alignment = align_center
+        num_q3 = len(variants[0].part3_keys)
+        for q_i in range(num_q3):
+            c_label = ws1.cell(row_cursor, 1, f"Câu {q_i + 1}")
+            c_label.font = font_bold
+            c_label.border = border_all
+            c_label.alignment = align_center
             if q_i % 2 == 1:
-                c_lbl.fill = fill_zebra
+                c_label.fill = fill_zebra
 
             for v_idx, v in enumerate(variants, start=2):
-                val = v.part3_keys[q_i] if q_i < len(v.part3_keys) else ""
-                c = ws1.cell(row_cursor, v_idx, val)
-                c.font = font_bold
-                c.border = border_all
-                c.alignment = align_center
+                ans_val = v.part3_keys[q_i] if q_i < len(v.part3_keys) else ""
+                c_val = ws1.cell(row_cursor, v_idx, ans_val)
+                c_val.font = font_bold
+                c_val.border = border_all
+                c_val.alignment = align_center
                 if q_i % 2 == 1:
-                    c.fill = fill_zebra
+                    c_val.fill = fill_zebra
             ws1.row_dimensions[row_cursor].height = 20
             row_cursor += 1
 
     ws1.column_dimensions["A"].width = 16
-    for v_idx in range(2, 2 + len(variants)):
-        ws1.column_dimensions[get_column_letter(v_idx)].width = 15
+    for col_i in range(2, 2 + len(variants)):
+        ws1.column_dimensions[get_column_letter(col_i)].width = 15
 
+    # Sheet 2: Dạng bảng phẳng phục vụ chấm máy
     ws2 = wb.create_sheet(title="Chi_Tiet_Cham_May")
-    headers_s2 = ["Mã đề", "Phần", "Câu", "Đáp án"]
-    for col_i, h_text in enumerate(headers_s2, start=1):
-        c = ws2.cell(1, col_i, h_text)
-        c.font = font_header
-        c.fill = fill_header
-        c.border = border_all
-        c.alignment = align_center
+    headers2 = ["Mã đề", "Phần", "Câu số", "Đáp án chuẩn", "Câu gốc tham chiếu"]
+    for c_i, h_text in enumerate(headers2, start=1):
+        cell = ws2.cell(1, c_i, h_text)
+        cell.font = font_header
+        cell.fill = fill_header
+        cell.border = border_all
+        cell.alignment = align_center
+    ws2.row_dimensions[1].height = 22
 
-    r_s2 = 2
+    r2_idx = 2
     for v in variants:
-        for idx, k in enumerate(v.part1_keys, start=1):
-            ws2.cell(r_s2, 1, v.exam_code).alignment = align_center
-            ws2.cell(r_s2, 2, "Phần I").alignment = align_center
-            ws2.cell(r_s2, 3, f"Câu {idx}").alignment = align_center
-            ws2.cell(r_s2, 4, k).alignment = align_center
-            for col_i in range(1, 5):
-                ws2.cell(r_s2, col_i).font = font_cell
-                ws2.cell(r_s2, col_i).border = border_all
-            r_s2 += 1
-        for idx, k in enumerate(v.part2_keys, start=1):
-            ws2.cell(r_s2, 1, v.exam_code).alignment = align_center
-            ws2.cell(r_s2, 2, "Phần II").alignment = align_center
-            ws2.cell(r_s2, 3, f"Câu {idx} (a-b-c-d)").alignment = align_center
-            ws2.cell(r_s2, 4, k).alignment = align_center
-            for col_i in range(1, 5):
-                ws2.cell(r_s2, col_i).font = font_cell
-                ws2.cell(r_s2, col_i).border = border_all
-            r_s2 += 1
-        for idx, k in enumerate(v.part3_keys, start=1):
-            ws2.cell(r_s2, 1, v.exam_code).alignment = align_center
-            ws2.cell(r_s2, 2, "Phần III").alignment = align_center
-            ws2.cell(r_s2, 3, f"Câu {idx}").alignment = align_center
-            ws2.cell(r_s2, 4, k).alignment = align_center
-            for col_i in range(1, 5):
-                ws2.cell(r_s2, col_i).font = font_cell
-                ws2.cell(r_s2, col_i).border = border_all
-            r_s2 += 1
-
-    for col_i in range(1, 5):
-        ws2.column_dimensions[get_column_letter(col_i)].width = 18
-
-    ws3 = wb.create_sheet(title="Ma_Tran_Dao_Cau")
-    ws3.cell(1, 1, "Phần thi").font = font_header
-    ws3.cell(1, 2, "Câu ở đề trộn").font = font_header
-    ws3.cell(1, 1).fill = fill_header
-    ws3.cell(1, 2).fill = fill_header
-    ws3.cell(1, 1).border = border_all
-    ws3.cell(1, 2).border = border_all
-    ws3.cell(1, 1).alignment = align_center
-    ws3.cell(1, 2).alignment = align_center
-
-    for v_idx, v in enumerate(variants, start=3):
-        c = ws3.cell(1, v_idx, f"Mã đề {v.exam_code} (Câu gốc)")
-        c.font = font_header
-        c.fill = fill_header
-        c.border = border_all
-        c.alignment = align_center
-
-    r_s3 = 2
-    for part_key, part_label in [("part1", "Phần I"), ("part2", "Phần II"), ("part3", "Phần III")]:
-        count_q = len(variants[0].question_mapping[part_key]) if variants else 0
-        for q_i in range(count_q):
-            ws3.cell(r_s3, 1, part_label).alignment = align_center
-            ws3.cell(r_s3, 2, f"Câu {q_i + 1}").alignment = align_center
-            ws3.cell(r_s3, 1).font = font_cell
-            ws3.cell(r_s3, 2).font = font_bold
-            ws3.cell(r_s3, 1).border = border_all
-            ws3.cell(r_s3, 2).border = border_all
-            for v_idx, v in enumerate(variants, start=3):
-                orig_num = v.question_mapping[part_key][q_i]
-                c = ws3.cell(r_s3, v_idx, f"Câu gốc {orig_num}")
+        for idx, ans in enumerate(v.part1_keys, start=1):
+            orig_q = v.question_mapping["part1"][idx - 1]
+            row_vals = [v.exam_code, "Phần I", f"Câu {idx}", ans, f"Câu {orig_q} (Phần I gốc)"]
+            for c_i, val in enumerate(row_vals, start=1):
+                c = ws2.cell(r2_idx, c_i, val)
                 c.font = font_cell
                 c.border = border_all
                 c.alignment = align_center
-            r_s3 += 1
+            r2_idx += 1
 
-    ws3.column_dimensions["A"].width = 14
-    ws3.column_dimensions["B"].width = 16
-    for v_idx in range(3, 3 + len(variants)):
-        ws3.column_dimensions[get_column_letter(v_idx)].width = 20
+        for idx, ans in enumerate(v.part2_keys, start=1):
+            orig_q = v.question_mapping["part2"][idx - 1]
+            row_vals = [v.exam_code, "Phần II", f"Câu {idx} (a-b-c-d)", ans, f"Câu {orig_q} (Phần II gốc)"]
+            for c_i, val in enumerate(row_vals, start=1):
+                c = ws2.cell(r2_idx, c_i, val)
+                c.font = font_cell
+                c.border = border_all
+                c.alignment = align_center
+            r2_idx += 1
 
-    excel_buf = io.BytesIO()
-    wb.save(excel_buf)
-    return excel_buf.getvalue()
+        for idx, ans in enumerate(v.part3_keys, start=1):
+            orig_q = v.question_mapping["part3"][idx - 1]
+            row_vals = [v.exam_code, "Phần III", f"Câu {idx}", ans, f"Câu {orig_q} (Phần III gốc)"]
+            for c_i, val in enumerate(row_vals, start=1):
+                c = ws2.cell(r2_idx, c_i, val)
+                c.font = font_cell
+                c.border = border_all
+                c.alignment = align_center
+            r2_idx += 1
+
+    for c_i, w in enumerate([12, 14, 18, 18, 24], start=1):
+        ws2.column_dimensions[get_column_letter(c_i)].width = w
+
+    out_excel = io.BytesIO()
+    wb.save(out_excel)
+    return out_excel.getvalue()
 
 
-def generate_exam_codes(num_variants: int, starting_code: int = 101, custom_codes: Optional[List[str]] = None) -> List[str]:
-    if custom_codes:
-        cleaned = [c.strip() for c in custom_codes if c.strip()]
-        if cleaned:
-            return cleaned[:24]
-    num_variants = max(1, min(num_variants, 48))
-    return [str(starting_code + i) for i in range(num_variants)]
-
-
-def shuffle_and_package_zip(
+def create_shuffled_exam_package_zip(
     source_docx_bytes: bytes,
     exam_codes: List[str],
     meta: ExamMetadata,
     seed: Optional[int] = None,
 ) -> Tuple[bytes, ParsedExam, List[ShuffledVariantResult]]:
     parsed = parse_docx_exam(source_docx_bytes)
-    rng = random.Random(seed)
+    total_q = len(parsed.part1_questions) + len(parsed.part2_questions) + len(parsed.part3_questions)
+    if total_q == 0:
+        raise ValueError(
+            "Không tìm thấy câu hỏi nào trong file Word tải lên. "
+            "Vui lòng đảm bảo các câu hỏi bắt đầu bằng 'Câu 1.', 'Câu 2.' hoặc 'Câu 1:'."
+        )
 
+    rng = random.Random(seed)
     variants: List[ShuffledVariantResult] = []
     for code in exam_codes:
-        v_res = generate_single_variant_docx(
+        variant = generate_single_variant_docx(
             source_docx_bytes=source_docx_bytes,
             parsed=parsed,
-            exam_code=code,
+            exam_code=str(code).strip(),
             meta=meta,
             rng=rng,
         )
-        variants.append(v_res)
+        variants.append(variant)
 
     excel_bytes = generate_answer_key_excel(variants, meta)
 
