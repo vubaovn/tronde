@@ -3078,5 +3078,56 @@
       loadDocxArrayBuffer(initBytes.buffer, "De_Goc_Mau_Chuan_2025.docx");
     });
   </script>
+  
+
+
+
+<!-- Chống View Code HTML -->
+
+
+<script>
+    // 1. Chặn nhấp chuột phải
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+
+    // 2. Chặn các phím tắt phổ biến (F12, Ctrl+U, Ctrl+Shift+I, Ctrl+Shift+J, v.v.)
+    document.addEventListener('keydown', function(e) {
+        // Chặn F12
+        if (e.key === 'F12') {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Chặn Ctrl+Shift+I (Inspect), Ctrl+Shift+J (Console), Ctrl+U (View Source)
+        // Trên Mac dùng Cmd (metaKey) thay cho Ctrl (ctrlKey)
+        if ((e.ctrlKey || e.metaKey) && (e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j'))) {
+            e.preventDefault();
+            return false;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
+            e.preventDefault();
+            return false;
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // 3. Liên tục kích hoạt 'debugger' để làm treo/khóa tab DevTools nếu họ cố tình mở được
+    setInterval(function() {
+        debugger;
+    }, 100);
+</script>
+
+
+	
+
+
+
+
+  
+  
 </body>
 </html>
