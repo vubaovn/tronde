@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Module lõi Trộn Đề Trắc Nghiệm Chuẩn GDPT 2018 (3 Phần: TNKQ 4 lựa chọn, Đúng/Sai, Trả lời ngắn).
-Phiên bản v2.8:
+Phiên bản v3.0:
 1. Cài đặt kích thước Header và Footer chuẩn:
    - section.header_distance = 6 mm
    - section.footer_distance = 6 mm
@@ -242,7 +242,7 @@ def _iter_paragraph_effective_children(p_elem: OxmlElement) -> List[OxmlElement]
     for child in p_elem:
         if child.tag == qn("w:pPr") or child.tag in IGNORED_PARAGRAPH_MARKER_TAGS:
             continue
-        if child.tag in (qn("w:ins"), qn("w:smartTag"), qn("w:customXml")):
+        if child.tag in (qn("w:ins"), qn("w:smartTag"), qn("w:customXml"), qn("w:fldSimple")):
             out.extend(_iter_paragraph_effective_children(child))
         elif child.tag == qn("w:sdt"):
             sdt_content = child.find(qn("w:sdtContent"))
@@ -1168,9 +1168,18 @@ def build_part1_options_paragraphs(
 # Bộ phân tích cú pháp (Parser) file Word đề gốc (.docx)
 # ---------------------------------------------------------------------------
 
-PART1_HEADER_RE = re.compile(r"^\s*PHẦN\s*(?:I|1)\b", re.IGNORECASE)
-PART2_HEADER_RE = re.compile(r"^\s*PHẦN\s*(?:II|2)\b", re.IGNORECASE)
-PART3_HEADER_RE = re.compile(r"^\s*PHẦN\s*(?:III|3)\b", re.IGNORECASE)
+PART1_HEADER_RE = re.compile(
+    r"^\s*(?:PHẦN\s*(?:I|1)\b|(?:I|1)\s*[\.\:\)]\s*(?:PHẦN\b|CÂU\s+TRẮC\s+NGHIỆM|TRẮC\s+NGHIỆM))",
+    re.IGNORECASE,
+)
+PART2_HEADER_RE = re.compile(
+    r"^\s*(?:PHẦN\s*(?:II|2)\b|(?:II|2)\s*[\.\:\)]\s*(?:PHẦN\b|CÂU\s+TRẮC\s+NGHIỆM|TRẮC\s+NGHIỆM))",
+    re.IGNORECASE,
+)
+PART3_HEADER_RE = re.compile(
+    r"^\s*(?:PHẦN\s*(?:III|3)\b|(?:III|3)\s*[\.\:\)]\s*(?:PHẦN\b|CÂU\s+TRẮC\s+NGHIỆM|TRẮC\s+NGHIỆM))",
+    re.IGNORECASE,
+)
 END_MARKER_RE = re.compile(r"^\s*[-—–_=\*]{2,}\s*HẾT\s*[-—–_=\*]{2,}", re.IGNORECASE)
 
 QUESTION_START_RE = re.compile(
@@ -1187,8 +1196,519 @@ FIXED_OPTION_RE = re.compile(
 )
 
 
+
+def _int_to_roman(val: int) -> str:
+    if val <= 0:
+        return str(val)
+    roman_pairs = [
+        (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"),
+        (100, "C"), (90, "XC"), (50, "L"), (40, "XL"),
+        (10, "X"), (9, "IX"), (5, "V"), (4, "IV"), (1, "I"),
+    ]
+    res = []
+    n = val
+    for num, sym in roman_pairs:
+        while n >= num:
+            res.append(sym)
+            n -= num
+    return "".join(res)
+
+
+def _format_numbering_counter(val: int, num_fmt: str) -> str:
+    fmt = (num_fmt or "decimal").strip()
+    if fmt == "decimal":
+        return str(val)
+    if fmt == "decimalZero":
+        return f"{val:02d}"
+    if fmt in ("upperLetter", "ideographTraditional", "taiwaneseCounting"):
+        idx = max(1, val) - 1
+        return chr(ord("A") + (idx % 26)) * ((idx // 26) + 1)
+    if fmt == "lowerLetter":
+        idx = max(1, val) - 1
+        return chr(ord("a") + (idx % 26)) * ((idx // 26) + 1)
+    if fmt == "upperRoman":
+        return _int_to_roman(val)
+    if fmt == "lowerRoman":
+        return _int_to_roman(val).lower()
+    if fmt in ("bullet", "none"):
+        return ""
+    return str(val)
+
+
+def _flatten_numbering_fields_in_paragraph(p_elem: OxmlElement, seq_counters: Dict[str, int]) -> int:
+    """
+    Chuyển các trường đánh số tự động dạng Field (<w:fldSimple> hoặc <w:fldChar>/<w:instrText>
+    như SEQ, AUTONUM, LISTNUM) ở đầu đoạn văn thành văn bản thuần <w:r><w:t>.
+    """
+    converted = 0
+
+    # 1. Unwrap <w:fldSimple> nếu là trường đánh số SEQ / AUTONUM / LISTNUM
+    for child in list(p_elem):
+        if child.tag == qn("w:fldSimple"):
+            instr = (child.get(qn("w:instr")) or child.get("instr") or "").strip()
+            if re.match(r"^(?:SEQ|AUTONUM|LISTNUM)\b", instr, flags=re.IGNORECASE):
+                idx = list(p_elem).index(child)
+                runs = [copy.deepcopy(sub) for sub in child if sub.tag == qn("w:r")]
+                if not runs:
+                    seq_key = instr.upper()
+                    seq_counters[seq_key] = seq_counters.get(seq_key, 0) + 1
+                    r_new = OxmlElement("w:r")
+                    t_new = OxmlElement("w:t")
+                    t_new.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+                    t_new.text = f"{seq_counters[seq_key]}. "
+                    r_new.append(t_new)
+                    runs = [r_new]
+                p_elem.remove(child)
+                for offset, r_el in enumerate(runs):
+                    p_elem.insert(idx + offset, r_el)
+                converted += 1
+
+    # 2. Xử lý complex field (<w:fldChar w:fldCharType="begin"> ... <w:instrText>SEQ/AUTONUM/LISTNUM</w:instrText> ... <w:fldChar w:fldCharType="end">)
+    runs = [c for c in p_elem if c.tag == qn("w:r")]
+    in_field = False
+    is_num_field = False
+    in_result = False
+    field_instr = ""
+    runs_to_remove: List[OxmlElement] = []
+    result_runs: List[OxmlElement] = []
+
+    for r_el in runs:
+        fld_chars = r_el.findall(qn("w:fldChar"))
+        instr_els = r_el.findall(qn("w:instrText"))
+
+        if fld_chars:
+            for fc in fld_chars:
+                f_type = fc.get(qn("w:fldCharType")) or fc.get("fldCharType")
+                if f_type == "begin":
+                    in_field = True
+                    is_num_field = False
+                    in_result = False
+                    field_instr = ""
+                    runs_to_remove = [r_el]
+                    result_runs = []
+                elif f_type == "separate" and in_field:
+                    if re.match(r"^\s*(?:SEQ|AUTONUM|LISTNUM)\b", field_instr, flags=re.IGNORECASE):
+                        is_num_field = True
+                        runs_to_remove.append(r_el)
+                    in_result = True
+                elif f_type == "end" and in_field:
+                    if is_num_field or re.match(r"^\s*(?:SEQ|AUTONUM|LISTNUM)\b", field_instr, flags=re.IGNORECASE):
+                        is_num_field = True
+                        runs_to_remove.append(r_el)
+                        if not result_runs:
+                            seq_key = re.sub(r"\s+", " ", field_instr.strip().upper())
+                            seq_counters[seq_key] = seq_counters.get(seq_key, 0) + 1
+                            t_new = OxmlElement("w:t")
+                            t_new.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+                            t_new.text = f"{seq_counters[seq_key]}."
+                            r_el.remove(fc)
+                            r_el.append(t_new)
+                            runs_to_remove.remove(r_el)
+                        for rem_r in runs_to_remove:
+                            if rem_r.getparent() is p_elem:
+                                p_elem.remove(rem_r)
+                        converted += 1
+                    in_field = False
+                    is_num_field = False
+                    in_result = False
+            continue
+
+        if in_field:
+            if instr_els and not in_result:
+                field_instr += "".join((ie.text or "") for ie in instr_els)
+                runs_to_remove.append(r_el)
+            elif in_result:
+                result_runs.append(r_el)
+            else:
+                runs_to_remove.append(r_el)
+
+    return converted
+
+
+def convert_numbering_to_text_in_doc(doc: DocxDocument) -> int:
+    """
+    Chuyển toàn bộ đánh số tự động (Word Automatic Numbering `<w:numPr>`, Style Numbering
+    và trường `SEQ`/`AUTONUM`/`LISTNUM`) trong tài liệu `doc` thành văn bản `<w:r><w:t>` thực sự.
+    Trả về tổng số đoạn văn đã được chuyển từ Numbering sang Text.
+    """
+    body = doc.element.body
+    converted_count = 0
+    seq_counters: Dict[str, int] = {}
+
+    # Bước 1: Làm phẳng các trường SEQ / AUTONUM / LISTNUM nếu có
+    for p_el in body.iter(qn("w:p")):
+        converted_count += _flatten_numbering_fields_in_paragraph(p_el, seq_counters)
+
+    # Bước 2: Đọc cấu trúc đánh số trong styles.xml
+    style_map: Dict[str, Dict] = {}
+    styles_root = doc.styles.element if doc.styles is not None else None
+    if styles_root is not None:
+        for st_el in styles_root.findall(qn("w:style")):
+            st_id = st_el.get(qn("w:styleId")) or st_el.get("styleId")
+            if not st_id:
+                continue
+            based_el = st_el.find(qn("w:basedOn"))
+            based_id = (based_el.get(qn("w:val")) or based_el.get("val")) if based_el is not None else None
+            st_num_id: Optional[str] = None
+            st_ilvl: Optional[int] = None
+            st_pPr = st_el.find(qn("w:pPr"))
+            if st_pPr is not None:
+                st_numPr = st_pPr.find(qn("w:numPr"))
+                if st_numPr is not None:
+                    nid_el = st_numPr.find(qn("w:numId"))
+                    ilvl_el = st_numPr.find(qn("w:ilvl"))
+                    if nid_el is not None:
+                        st_num_id = nid_el.get(qn("w:val")) or nid_el.get("val")
+                    if ilvl_el is not None:
+                        try:
+                            st_ilvl = int(ilvl_el.get(qn("w:val")) or ilvl_el.get("val") or "0")
+                        except ValueError:
+                            st_ilvl = 0
+            style_map[st_id] = {
+                "basedOn": based_id,
+                "numId": st_num_id,
+                "ilvl": st_ilvl,
+                "rPr": st_el.find(qn("w:rPr")),
+            }
+
+    def resolve_style_numbering(style_id: Optional[str]) -> Tuple[Optional[str], Optional[int]]:
+        curr = style_id
+        visited = set()
+        found_num_id: Optional[str] = None
+        found_ilvl: Optional[int] = None
+        while curr and curr in style_map and curr not in visited:
+            visited.add(curr)
+            info = style_map[curr]
+            if found_num_id is None and info["numId"] is not None:
+                found_num_id = info["numId"]
+            if found_ilvl is None and info["ilvl"] is not None:
+                found_ilvl = info["ilvl"]
+            if found_num_id is not None and found_ilvl is not None:
+                break
+            curr = info["basedOn"]
+        return found_num_id, found_ilvl
+
+    # Bước 3: Tìm numbering_part qua rels (tránh tạo part giả nếu file không có numbering.xml)
+    numbering_root: Optional[OxmlElement] = None
+    for rel in doc.part.rels.values():
+        if rel.reltype.endswith("/numbering"):
+            try:
+                numbering_root = rel.target_part.element
+            except Exception:
+                numbering_root = None
+            break
+
+    if numbering_root is None:
+        return converted_count
+
+    def parse_lvl_element(lvl_el: OxmlElement, is_override: bool = False) -> Dict:
+        ilvl_str = lvl_el.get(qn("w:ilvl")) or lvl_el.get("ilvl") or "0"
+        try:
+            ilvl_val = int(ilvl_str)
+        except ValueError:
+            ilvl_val = 0
+
+        start_el = lvl_el.find(qn("w:start"))
+        start_val = 1
+        if start_el is not None:
+            try:
+                start_val = int(start_el.get(qn("w:val")) or start_el.get("val") or "1")
+            except ValueError:
+                start_val = 1
+
+        fmt_el = lvl_el.find(qn("w:numFmt"))
+        num_fmt = (fmt_el.get(qn("w:val")) or fmt_el.get("val") or "decimal") if fmt_el is not None else "decimal"
+
+        txt_el = lvl_el.find(qn("w:lvlText"))
+        lvl_text = (txt_el.get(qn("w:val")) or txt_el.get("val") or "%1.") if txt_el is not None else "%1."
+
+        pstyle_el = lvl_el.find(qn("w:pStyle"))
+        pstyle_val = (pstyle_el.get(qn("w:val")) or pstyle_el.get("val")) if pstyle_el is not None else None
+
+        return {
+            "ilvl": ilvl_val,
+            "start": start_val,
+            "numFmt": num_fmt,
+            "lvlText": lvl_text,
+            "pStyle": pstyle_val,
+            "rPr": lvl_el.find(qn("w:rPr")),
+            "isOverride": is_override,
+        }
+
+    abstract_map: Dict[str, Dict] = {}
+    for abs_el in numbering_root.findall(qn("w:abstractNum")):
+        abs_id = abs_el.get(qn("w:abstractNumId")) or abs_el.get("abstractNumId")
+        if not abs_id:
+            continue
+        ns_link_el = abs_el.find(qn("w:numStyleLink"))
+        ns_link = (ns_link_el.get(qn("w:val")) or ns_link_el.get("val")) if ns_link_el is not None else None
+        levels: Dict[int, Dict] = {}
+        for lvl_el in abs_el.findall(qn("w:lvl")):
+            l_info = parse_lvl_element(lvl_el, is_override=False)
+            levels[l_info["ilvl"]] = l_info
+            if l_info["pStyle"] and l_info["pStyle"] in style_map:
+                if style_map[l_info["pStyle"]]["ilvl"] is None:
+                    style_map[l_info["pStyle"]]["ilvl"] = l_info["ilvl"]
+        abstract_map[abs_id] = {
+            "numStyleLink": ns_link,
+            "levels": levels,
+        }
+
+    num_map: Dict[str, Dict] = {}
+    for num_el in numbering_root.findall(qn("w:num")):
+        num_id = num_el.get(qn("w:numId")) or num_el.get("numId")
+        if not num_id:
+            continue
+        abs_id_el = num_el.find(qn("w:abstractNumId"))
+        abs_id = (abs_id_el.get(qn("w:val")) or abs_id_el.get("val")) if abs_id_el is not None else None
+        overrides: Dict[int, Dict] = {}
+        for ovr_el in num_el.findall(qn("w:lvlOverride")):
+            o_ilvl_str = ovr_el.get(qn("w:ilvl")) or ovr_el.get("ilvl") or "0"
+            try:
+                o_ilvl = int(o_ilvl_str)
+            except ValueError:
+                o_ilvl = 0
+            st_ovr_el = ovr_el.find(qn("w:startOverride"))
+            st_ovr: Optional[int] = None
+            if st_ovr_el is not None:
+                try:
+                    st_ovr = int(st_ovr_el.get(qn("w:val")) or st_ovr_el.get("val") or "1")
+                except ValueError:
+                    st_ovr = None
+            lvl_sub = ovr_el.find(qn("w:lvl"))
+            lvl_ovr = parse_lvl_element(lvl_sub, is_override=True) if lvl_sub is not None else None
+            overrides[o_ilvl] = {
+                "startOverride": st_ovr,
+                "lvl": lvl_ovr,
+            }
+        num_map[num_id] = {
+            "abstractNumId": abs_id,
+            "overrides": overrides,
+        }
+
+    # Giải quyết liên kết numStyleLink giữa abstractNum -> style -> num -> abstractNum
+    for abs_id, abs_info in abstract_map.items():
+        if abs_info["numStyleLink"] and not abs_info["levels"]:
+            linked_num_id, _ = resolve_style_numbering(abs_info["numStyleLink"])
+            if linked_num_id and linked_num_id in num_map:
+                target_abs_id = num_map[linked_num_id]["abstractNumId"]
+                if target_abs_id and target_abs_id in abstract_map:
+                    abs_info["levels"] = copy.deepcopy(abstract_map[target_abs_id]["levels"])
+                    for l_info in abs_info["levels"].values():
+                        if l_info["pStyle"] and l_info["pStyle"] in style_map:
+                            if style_map[l_info["pStyle"]]["ilvl"] is None:
+                                style_map[l_info["pStyle"]]["ilvl"] = l_info["ilvl"]
+
+    def get_effective_lvl(num_id: str, ilvl: int) -> Tuple[Optional[Dict], Optional[int]]:
+        n_info = num_map.get(num_id)
+        if not n_info:
+            return None, None
+        abs_info = abstract_map.get(n_info["abstractNumId"] or "")
+        ovr = n_info["overrides"].get(ilvl)
+        start_ovr = ovr["startOverride"] if ovr else None
+        if ovr and ovr["lvl"] is not None:
+            return ovr["lvl"], start_ovr
+        if abs_info:
+            lvl_d = abs_info["levels"].get(ilvl) or abs_info["levels"].get(0)
+            return lvl_d, start_ovr
+        return None, start_ovr
+
+    counters: Dict[Tuple[str, int], int] = {}
+    initialized: set = set()
+
+    for p_el in body.iter(qn("w:p")):
+        pPr = p_el.find(qn("w:pPr"))
+        if pPr is None:
+            continue
+
+        direct_num_id: Optional[str] = None
+        direct_ilvl: Optional[int] = None
+        numPr = pPr.find(qn("w:numPr"))
+        if numPr is not None:
+            nid_el = numPr.find(qn("w:numId"))
+            ilvl_el = numPr.find(qn("w:ilvl"))
+            if nid_el is not None:
+                direct_num_id = nid_el.get(qn("w:val")) or nid_el.get("val")
+            if ilvl_el is not None:
+                try:
+                    direct_ilvl = int(ilvl_el.get(qn("w:val")) or ilvl_el.get("val") or "0")
+                except ValueError:
+                    direct_ilvl = 0
+            pPr.remove(numPr)
+
+        pstyle_el = pPr.find(qn("w:pStyle"))
+        pstyle_id = (pstyle_el.get(qn("w:val")) or pstyle_el.get("val")) if pstyle_el is not None else None
+        style_num_id, style_ilvl = resolve_style_numbering(pstyle_id)
+
+        eff_num_id = direct_num_id if direct_num_id is not None else style_num_id
+        eff_ilvl = direct_ilvl if direct_ilvl is not None else (style_ilvl if style_ilvl is not None else 0)
+
+        if not eff_num_id or eff_num_id == "0" or eff_num_id not in num_map:
+            continue
+
+        existing_raw_txt = get_paragraph_text(p_el)
+        existing_txt = existing_raw_txt.lstrip()
+        has_media = (
+            len(p_el.findall(".//" + qn("w:drawing"))) > 0
+            or len(p_el.findall(".//" + qn("m:oMath"))) > 0
+            or len(p_el.findall(".//" + qn("w:object"))) > 0
+            or len(p_el.findall(".//" + qn("w:pict"))) > 0
+            or len(p_el.findall(".//" + qn("w:sym"))) > 0
+        )
+        lvl_info, start_ovr = get_effective_lvl(eff_num_id, eff_ilvl)
+        if not lvl_info:
+            continue
+
+        num_fmt = lvl_info["numFmt"]
+        if num_fmt in ("bullet", "none"):
+            continue
+
+        is_question_lvl = (
+            bool(re.search(r"(?:Câu|Question|Bài)", lvl_info["lvlText"] or "", flags=re.IGNORECASE))
+            or (num_fmt in ("decimal", "decimalZero"))
+        )
+        if not existing_txt and not has_media and not is_question_lvl:
+            continue
+
+        for k_num, k_lvl in list(initialized):
+            if k_num == eff_num_id and k_lvl > eff_ilvl:
+                initialized.remove((k_num, k_lvl))
+
+        key = (eff_num_id, eff_ilvl)
+        if key not in initialized:
+            start_v = start_ovr if start_ovr is not None else lvl_info["start"]
+            counters[key] = start_v
+            initialized.add(key)
+        else:
+            counters[key] += 1
+
+        curr_val = counters[key]
+        raw_label = lvl_info["lvlText"] or "%1."
+        for k in range(1, 10):
+            token = f"%{k}"
+            if token in raw_label:
+                sub_lvl, _ = get_effective_lvl(eff_num_id, k - 1)
+                sub_start = sub_lvl["start"] if sub_lvl else 1
+                sub_fmt = sub_lvl["numFmt"] if sub_lvl else "decimal"
+                sub_val = counters.get((eff_num_id, k - 1), sub_start)
+                raw_label = raw_label.replace(token, _format_numbering_counter(sub_val, sub_fmt))
+
+        label_str = raw_label.strip()
+        if not label_str:
+            continue
+
+        prefix_str = ""
+        if re.match(r"^(?:Câu|Question|Bài)\s*\d+$", label_str, flags=re.IGNORECASE):
+            if QUESTION_START_RE.match(existing_txt):
+                prefix_str = ""
+            elif existing_txt[:1] in ".:)":
+                prefix_str = label_str
+            else:
+                prefix_str = f"{label_str}. "
+        elif re.match(r"^(?:Câu|Question|Bài)\s*\d+\s*(?:\([^)]*\))?\s*[\.\:\)]$", label_str, flags=re.IGNORECASE):
+            if QUESTION_START_RE.match(existing_txt):
+                prefix_str = ""
+            elif existing_txt[:1] in ".:)":
+                prefix_str = re.sub(r"[\.\:\)]\s*$", "", label_str)
+            else:
+                prefix_str = f"{label_str} "
+        elif num_fmt in ("decimal", "decimalZero") and re.match(r"^\d+[\.\:\)]?$", label_str):
+            if QUESTION_START_RE.match(existing_txt):
+                prefix_str = ""
+            elif re.match(r"^PHẦN\b", existing_txt, flags=re.IGNORECASE):
+                prefix_str = f"{label_str} "
+            elif re.match(r"^(?:Câu|Question|Bài)\s*$", existing_txt, flags=re.IGNORECASE):
+                prefix_str = f"{label_str} "
+            else:
+                punct = label_str[-1] if label_str[-1] in ".:)" else "."
+                if existing_txt[:1] in ".:)":
+                    prefix_str = f"Câu {curr_val}"
+                else:
+                    prefix_str = f"Câu {curr_val}{punct} "
+        elif num_fmt == "upperLetter" and re.match(r"^\*?[A-D][\.\:\)]?$", label_str, flags=re.IGNORECASE):
+            if re.match(r"^\*?\s*[A-D]\s*[\.\:\)]", existing_txt):
+                prefix_str = ""
+            elif re.match(r"^\*?[A-D]$", label_str, flags=re.IGNORECASE):
+                prefix_str = label_str if existing_txt[:1] in ".:)" else f"{label_str}. "
+            else:
+                prefix_str = f"{label_str} "
+        elif num_fmt == "lowerLetter" and re.match(r"^\*?[a-d][\)\.\:]?$", label_str, flags=re.IGNORECASE):
+            if re.match(r"^\*?\s*[a-d]\s*[\)\.\:]", existing_txt):
+                prefix_str = ""
+            elif re.match(r"^\*?[a-d]$", label_str, flags=re.IGNORECASE):
+                prefix_str = label_str if existing_txt[:1] in ").:" else f"{label_str}) "
+            else:
+                prefix_str = f"{label_str} "
+        elif num_fmt == "upperRoman" and re.match(r"^(?:I|II|III)[\.\:\)]?$", label_str, flags=re.IGNORECASE):
+            if re.match(r"^PHẦN\b", existing_txt, flags=re.IGNORECASE):
+                prefix_str = ""
+            elif re.search(r"trắc\s*nghiệm|nhiều\s*phương\s*án|đúng\s*sai|trả\s*lời\s*ngắn", existing_txt, flags=re.IGNORECASE):
+                punct = label_str[-1] if label_str[-1] in ".:)" else "."
+                rom = re.sub(r"[\.\:\)]$", "", label_str).upper()
+                prefix_str = f"PHẦN {rom}{punct} "
+            else:
+                prefix_str = f"{label_str} "
+        else:
+            prefix_str = f"{label_str} "
+
+        pPr_rPr = pPr.find(qn("w:rPr"))
+        lvl_rPr = lvl_info["rPr"]
+        marker_is_ul = is_rPr_underlined(pPr_rPr) or (lvl_info["isOverride"] and is_rPr_underlined(lvl_rPr))
+        marker_is_bold = (
+            is_rPr_bold(pPr_rPr)
+            or is_rPr_bold(lvl_rPr)
+            or prefix_str.upper().startswith("CÂU")
+            or prefix_str.upper().startswith("PHẦN")
+        )
+
+        # Nếu đoạn văn dùng gạch chân ở <w:pPr><w:rPr> để gạch chân nhãn tự động (A. hoặc a)),
+        # xóa gạch chân khỏi <w:pPr><w:rPr> sau khi đã chuyển sang run nhãn để không làm gạch chân cả câu
+        if pPr_rPr is not None and is_rPr_underlined(pPr_rPr):
+            remove_underline_from_rPr(pPr_rPr)
+
+        if prefix_str:
+            r_num = OxmlElement("w:r")
+            rPr_num = OxmlElement("w:rPr")
+            if marker_is_bold:
+                rPr_num.append(OxmlElement("w:b"))
+            if marker_is_ul and not (prefix_str.upper().startswith("CÂU") or prefix_str.upper().startswith("PHẦN")):
+                u_el = OxmlElement("w:u")
+                u_el.set(qn("w:val"), "single")
+                rPr_num.append(u_el)
+            r_num.append(rPr_num)
+            t_num = OxmlElement("w:t")
+            t_num.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+            t_num.text = prefix_str
+            r_num.append(t_num)
+            pPr.addnext(r_num)
+            converted_count += 1
+        elif marker_is_ul:
+            # Nếu đoạn văn đã có sẵn nhãn A. trong text nhưng gạch chân nằm ở <w:pPr><w:rPr>
+            first_r = p_el.find(qn("w:r"))
+            if first_r is not None:
+                f_rPr = first_r.find(qn("w:rPr"))
+                if f_rPr is None:
+                    f_rPr = OxmlElement("w:rPr")
+                    first_r.insert(0, f_rPr)
+                if not is_rPr_underlined(f_rPr):
+                    u_el = OxmlElement("w:u")
+                    u_el.set(qn("w:val"), "single")
+                    f_rPr.append(u_el)
+
+    # Bước 4: Xóa toàn bộ <w:numPr> trong styles.xml để khi xuất đề Word không bị đánh số tự động chồng lên
+    if styles_root is not None:
+        for st_el in styles_root.findall(qn("w:style")):
+            st_pPr = st_el.find(qn("w:pPr"))
+            if st_pPr is not None:
+                for st_numPr in list(st_pPr.findall(qn("w:numPr"))):
+                    st_pPr.remove(st_numPr)
+
+    return converted_count
+
+
 def parse_docx_exam(docx_bytes: bytes) -> ParsedExam:
     doc = docx.Document(io.BytesIO(docx_bytes))
+    converted_num_count = convert_numbering_to_text_in_doc(doc)
     parsed = ParsedExam(source_doc=doc)
 
     body = doc.element.body
@@ -1197,6 +1717,21 @@ def parse_docx_exam(docx_bytes: bytes) -> ParsedExam:
 
     def finalize_question(q: Optional[QuestionBlock]) -> None:
         if q is None:
+            return
+        has_stem_content = any(
+            (
+                el.tag == qn("w:tbl")
+                or bool(get_paragraph_text(el).strip())
+                or len(el.findall(".//" + qn("w:drawing"))) > 0
+                or len(el.findall(".//" + qn("m:oMath"))) > 0
+                or len(el.findall(".//" + qn("w:object"))) > 0
+                or len(el.findall(".//" + qn("w:pict"))) > 0
+                or len(el.findall(".//" + qn("w:sym"))) > 0
+            )
+            for el in q.stem_elements
+        )
+        if not has_stem_content and not q.options and not q.short_answer:
+            q_counters[q.part] = max(0, q_counters[q.part] - 1)
             return
         if q.part == 1:
             if q.options and not any(opt.is_correct for opt in q.options):
@@ -1345,6 +1880,23 @@ def parse_docx_exam(docx_bytes: bytes) -> ParsedExam:
                 if current_part in (1, 2):
                     inline_opts = split_inline_options_in_paragraph(child, part=current_part)
                     if inline_opts:
+                        first_lbl = inline_opts[0][0]
+                        expected_first = "A" if current_part == 1 else "a"
+                        has_complete_opts = len(current_q.options) >= 4 or any(
+                            o.original_label.lower() == "d" for o in current_q.options
+                        )
+                        if first_lbl == expected_first and has_complete_opts:
+                            finalize_question(current_q)
+                            q_counters[current_part] += 1
+                            empty_stem_p = OxmlElement("w:p")
+                            orig_pPr = child.find(qn("w:pPr"))
+                            if orig_pPr is not None:
+                                empty_stem_p.append(copy.deepcopy(orig_pPr))
+                            current_q = QuestionBlock(
+                                part=current_part,
+                                original_index=q_counters[current_part],
+                                stem_elements=[empty_stem_p],
+                            )
                         for lbl, is_corr, opt_p in inline_opts:
                             current_q.options.append(
                                 OptionBlock(
@@ -1357,7 +1909,15 @@ def parse_docx_exam(docx_bytes: bytes) -> ParsedExam:
 
                     if not current_q.options:
                         clean_stem_p, trailing_opts = split_stem_and_trailing_options(child, part=current_part)
-                        current_q.stem_elements.append(copy.deepcopy(clean_stem_p))
+                        if (
+                            len(current_q.stem_elements) == 1
+                            and current_q.stem_elements[0].tag == qn("w:p")
+                            and not get_paragraph_text(current_q.stem_elements[0]).strip()
+                            and not _extract_trimmed_option_content_nodes(current_q.stem_elements[0])
+                        ):
+                            current_q.stem_elements[0] = copy.deepcopy(clean_stem_p)
+                        else:
+                            current_q.stem_elements.append(copy.deepcopy(clean_stem_p))
                         if trailing_opts:
                             for lbl, is_corr, opt_p in trailing_opts:
                                 current_q.options.append(
@@ -1483,11 +2043,12 @@ def _append_word_field_to_paragraph(
     italic: bool = False,
     bold: bool = False,
 ) -> None:
-    """Chèn một trường động của Word (như PAGE hoặc NUMPAGES) vào đoạn văn `p`."""
+    """Chèn một trường động của Word (như PAGE hoặc NUMPAGES) với cờ w:dirty=true để Word tự động cập nhật."""
     r_begin = p.add_run()
     _format_run(r_begin, font_name=font_name, size_pt=size_pt, italic=italic, bold=bold)
     fld_begin = OxmlElement("w:fldChar")
     fld_begin.set(qn("w:fldCharType"), "begin")
+    fld_begin.set(qn("w:dirty"), "true")
     r_begin._element.append(fld_begin)
 
     r_instr = p.add_run()
@@ -1513,13 +2074,83 @@ def _append_word_field_to_paragraph(
     r_end._element.append(fld_end)
 
 
-def _append_numpages_field_to_paragraph(p, font_name="Times New Roman", size_pt=12, italic=True):
+def _append_numpages_field_to_paragraph(p, default_pages: str = "4", font_name="Times New Roman", size_pt=12, italic=True):
     """Chèn trường tự động đếm tổng số trang của Word: 'Đề gồm: <NUMPAGES> trang'."""
     r1 = p.add_run("Đề gồm: ")
     _format_run(r1, font_name=font_name, size_pt=size_pt, italic=italic)
-    _append_word_field_to_paragraph(p, "NUMPAGES", default_val="04", font_name=font_name, size_pt=size_pt, italic=italic)
+    _append_word_field_to_paragraph(p, "NUMPAGES", default_val=default_pages, font_name=font_name, size_pt=size_pt, italic=italic)
     r2 = p.add_run(" trang")
     _format_run(r2, font_name=font_name, size_pt=size_pt, italic=italic)
+
+
+def _enable_auto_update_fields_in_settings(doc: DocxDocument) -> None:
+    """Bật cờ <w:updateFields w:val="true"/> trong word/settings.xml để Word luôn cập nhật số trang NUMPAGES."""
+    try:
+        settings_el = doc.settings.element
+        if settings_el is not None:
+            upd = settings_el.find(qn("w:updateFields"))
+            if upd is None:
+                upd = OxmlElement("w:updateFields")
+                settings_el.append(upd)
+            upd.set(qn("w:val"), "true")
+    except Exception:
+        pass
+
+
+def _estimate_body_page_count(body_el: OxmlElement, source_docx_bytes: Optional[bytes] = None) -> int:
+    """
+    Ước lượng chính xác số trang của đề xuất ra dựa trên tổng chiều cao (pt) của các đoạn văn,
+    công thức MathType/OMML, bảng biểu và hình vẽ trên khổ A4 (lề trên 11mm, lề dưới 11mm).
+    """
+    import math
+    total_height_pt = 0.0
+    for child in body_el:
+        if child.tag == qn("w:sectPr"):
+            continue
+        if child.tag == qn("w:tbl"):
+            rows = child.findall(".//" + qn("w:tr"))
+            total_height_pt += max(1, len(rows)) * 52.0 + 10.0
+            continue
+        if child.tag == qn("w:p"):
+            vis_chars = _measure_xml_node_visual_chars(child)
+            br_count = len(child.findall(".//" + qn("w:br"))) + len(child.findall(".//" + qn("w:cr")))
+            lines = max(1, int(math.ceil(vis_chars / 82.0)) + br_count)
+            inline_extras: List[float] = []
+            block_extra = 0.0
+            for sub in child.iter():
+                s_ln = sub.tag.split("}")[-1] if "}" in sub.tag else sub.tag
+                if s_ln == "extent":
+                    cy_s = sub.get("cy")
+                    if cy_s:
+                        try:
+                            h_pt = float(cy_s) / 12700.0
+                            if h_pt > 45.0:
+                                block_extra += h_pt + 8.0
+                            elif h_pt > 15.0:
+                                inline_extras.append(h_pt - 13.0)
+                        except ValueError:
+                            pass
+                elif s_ln == "shape":
+                    st_s = sub.get("style") or ""
+                    m_h = re.search(r"(?:^|;|\s)height\s*:\s*([\d\.,]+)\s*(pt|in|cm|mm|px)\b", st_s, flags=re.IGNORECASE)
+                    if m_h:
+                        h_pt = _convert_css_dim_to_pt(m_h.group(1), m_h.group(2))
+                        if h_pt > 45.0:
+                            block_extra += h_pt + 8.0
+                        elif h_pt > 15.0:
+                            inline_extras.append(h_pt - 13.0)
+                elif s_ln == "oMath":
+                    has_tall_math = any(
+                        (m_sub.tag.split("}")[-1] if "}" in m_sub.tag else m_sub.tag) in ("f", "rad", "nary", "eqArr")
+                        for m_sub in sub.iter()
+                    )
+                    inline_extras.append(14.5 if has_tall_math else 4.5)
+            inline_extras.sort(reverse=True)
+            top_inline_extra = sum(inline_extras[: max(1, lines)])
+            total_height_pt += lines * 16.5 + 4.0 + block_extra + min(lines * 18.0, top_inline_extra)
+
+    est_pages = max(1, int(math.ceil(total_height_pt / 710.0)))
+    return est_pages
 
 
 def _configure_section_headers_and_footers(doc: DocxDocument, exam_code: str) -> None:
@@ -1587,6 +2218,7 @@ def generate_single_variant_docx(
     rng: random.Random,
 ) -> ShuffledVariantResult:
     doc = docx.Document(io.BytesIO(source_docx_bytes))
+    convert_numbering_to_text_in_doc(doc)
     body = doc.element.body
 
     sectPr = body.find(qn("w:sectPr"))
@@ -1829,6 +2461,44 @@ def generate_single_variant_docx(
     _format_run(r_end, size_pt=11, bold=True)
     r_note = p_end.add_run("(Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm)")
     _format_run(r_note, size_pt=10.5, italic=True)
+
+    _enable_auto_update_fields_in_settings(doc)
+    est_pages_str = str(_estimate_body_page_count(body, source_docx_bytes))
+    # Cập nhật giá trị hiển thị mặc định của trường NUMPAGES trong bảng tiêu đề và footer
+    for fld_instr in body.findall(".//" + qn("w:instrText")):
+        if fld_instr.text and "NUMPAGES" in fld_instr.text:
+            r_parent = fld_instr.getparent()
+            if r_parent is not None:
+                nxt = r_parent.getnext()
+                while nxt is not None and nxt.tag == qn("w:r"):
+                    if nxt.find(qn("w:fldChar")) is not None:
+                        fc_el = nxt.find(qn("w:fldChar"))
+                        if (fc_el.get(qn("w:fldCharType")) or fc_el.get("fldCharType")) == "end":
+                            break
+                    else:
+                        t_el = nxt.find(qn("w:t"))
+                        if t_el is not None:
+                            t_el.text = est_pages_str
+                    nxt = nxt.getnext()
+
+    for section in doc.sections:
+        for ftr in (section.footer, section.first_page_footer, section.even_page_footer):
+            if ftr is not None:
+                for fld_instr in ftr._element.findall(".//" + qn("w:instrText")):
+                    if fld_instr.text and "NUMPAGES" in fld_instr.text:
+                        r_parent = fld_instr.getparent()
+                        if r_parent is not None:
+                            nxt = r_parent.getnext()
+                            while nxt is not None and nxt.tag == qn("w:r"):
+                                if nxt.find(qn("w:fldChar")) is not None:
+                                    fc_el = nxt.find(qn("w:fldChar"))
+                                    if (fc_el.get(qn("w:fldCharType")) or fc_el.get("fldCharType")) == "end":
+                                        break
+                                else:
+                                    t_el = nxt.find(qn("w:t"))
+                                    if t_el is not None:
+                                        t_el.text = est_pages_str
+                                nxt = nxt.getnext()
 
     out_buf = io.BytesIO()
     doc.save(out_buf)
@@ -2074,3 +2744,20 @@ def create_shuffled_exam_package_zip(
         zf.writestr("Bang_Dap_An_Cham_Thi.xlsx", excel_bytes)
 
     return zip_buf.getvalue(), parsed, variants
+
+
+def generate_exam_codes(
+    num_variants: int = 4,
+    starting_code: int = 1001,
+    custom_codes: Optional[List[str]] = None,
+) -> List[str]:
+    if custom_codes:
+        cleaned = [str(c).strip() for c in custom_codes if str(c).strip()]
+        if cleaned:
+            return cleaned[:24]
+    count = max(1, min(int(num_variants or 4), 24))
+    start = int(starting_code or 1001)
+    return [str(start + i) for i in range(count)]
+
+
+shuffle_and_package_zip = create_shuffled_exam_package_zip
