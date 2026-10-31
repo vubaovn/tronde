@@ -1597,59 +1597,32 @@ def convert_numbering_to_text_in_doc(doc: DocxDocument) -> int:
         if not label_str:
             continue
 
-        prefix_str = ""
-        if re.match(r"^(?:Câu|Question|Bài)\s*\d+$", label_str, flags=re.IGNORECASE):
-            if QUESTION_START_RE.match(existing_txt):
-                prefix_str = ""
-            elif existing_txt[:1] in ".:)":
-                prefix_str = label_str
-            else:
-                prefix_str = f"{label_str}. "
-        elif re.match(r"^(?:Câu|Question|Bài)\s*\d+\s*(?:\([^)]*\))?\s*[\.\:\)]$", label_str, flags=re.IGNORECASE):
-            if QUESTION_START_RE.match(existing_txt):
-                prefix_str = ""
-            elif existing_txt[:1] in ".:)":
-                prefix_str = re.sub(r"[\.\:\)]\s*$", "", label_str)
-            else:
-                prefix_str = f"{label_str} "
-        elif num_fmt in ("decimal", "decimalZero") and re.match(r"^\d+[\.\:\)]?$", label_str):
-            if QUESTION_START_RE.match(existing_txt):
-                prefix_str = ""
-            elif re.match(r"^PHẦN\b", existing_txt, flags=re.IGNORECASE):
-                prefix_str = f"{label_str} "
-            elif re.match(r"^(?:Câu|Question|Bài)\s*$", existing_txt, flags=re.IGNORECASE):
+        # Chuẩn hóa nhãn Numbering thành Text gọn nhẹ trong 1 bước:
+        if num_fmt in ("decimal", "decimalZero") and re.match(r"^\d+[\.\:\)]?$", label_str):
+            punct = label_str[-1] if label_str[-1] in ".:)" else "."
+            if re.match(r"^(?:PHẦN|Câu|Question|Bài)\b", existing_txt, flags=re.IGNORECASE):
                 prefix_str = f"{label_str} "
             else:
-                punct = label_str[-1] if label_str[-1] in ".:)" else "."
-                if existing_txt[:1] in ".:)":
-                    prefix_str = f"Câu {curr_val}"
-                else:
-                    prefix_str = f"Câu {curr_val}{punct} "
-        elif num_fmt == "upperLetter" and re.match(r"^\*?[A-D][\.\:\)]?$", label_str, flags=re.IGNORECASE):
-            if re.match(r"^\*?\s*[A-D]\s*[\.\:\)]", existing_txt):
-                prefix_str = ""
-            elif re.match(r"^\*?[A-D]$", label_str, flags=re.IGNORECASE):
-                prefix_str = label_str if existing_txt[:1] in ".:)" else f"{label_str}. "
-            else:
-                prefix_str = f"{label_str} "
-        elif num_fmt == "lowerLetter" and re.match(r"^\*?[a-d][\)\.\:]?$", label_str, flags=re.IGNORECASE):
-            if re.match(r"^\*?\s*[a-d]\s*[\)\.\:]", existing_txt):
-                prefix_str = ""
-            elif re.match(r"^\*?[a-d]$", label_str, flags=re.IGNORECASE):
-                prefix_str = label_str if existing_txt[:1] in ").:" else f"{label_str}) "
-            else:
-                prefix_str = f"{label_str} "
-        elif num_fmt == "upperRoman" and re.match(r"^(?:I|II|III)[\.\:\)]?$", label_str, flags=re.IGNORECASE):
-            if re.match(r"^PHẦN\b", existing_txt, flags=re.IGNORECASE):
-                prefix_str = ""
-            elif re.search(r"trắc\s*nghiệm|nhiều\s*phương\s*án|đúng\s*sai|trả\s*lời\s*ngắn", existing_txt, flags=re.IGNORECASE):
-                punct = label_str[-1] if label_str[-1] in ".:)" else "."
-                rom = re.sub(r"[\.\:\)]$", "", label_str).upper()
-                prefix_str = f"PHẦN {rom}{punct} "
-            else:
-                prefix_str = f"{label_str} "
+                prefix_str = f"Câu {curr_val}" if existing_txt[:1] in ".:)" else f"Câu {curr_val}{punct} "
+        elif re.match(r"^(?:Câu|Question|Bài)\s*\d+$", label_str, flags=re.IGNORECASE):
+            prefix_str = label_str if existing_txt[:1] in ".:)" else f"{label_str}. "
+        elif num_fmt == "upperLetter" and re.match(r"^\*?[A-D]$", label_str, flags=re.IGNORECASE):
+            prefix_str = label_str if existing_txt[:1] in ".:)" else f"{label_str}. "
+        elif num_fmt == "lowerLetter" and re.match(r"^\*?[a-d]$", label_str, flags=re.IGNORECASE):
+            prefix_str = label_str if existing_txt[:1] in ").:" else f"{label_str}) "
+        elif num_fmt == "upperRoman" and re.match(r"^(?:I|II|III)[\.\:\)]?$", label_str, flags=re.IGNORECASE) and re.search(
+            r"trắc\s*nghiệm|nhiều\s*phương\s*án|đúng\s*sai|trả\s*lời\s*ngắn", existing_txt, flags=re.IGNORECASE
+        ):
+            rom = re.sub(r"[\.\:\)]$", "", label_str).upper()
+            prefix_str = f"PHẦN {rom}. "
         else:
             prefix_str = f"{label_str} "
+
+        # Tránh nhân đôi nhãn nếu văn bản gốc đã gõ sẵn nhãn trùng lặp
+        if (prefix_str.upper().startswith("CÂU") and QUESTION_START_RE.match(existing_txt)) or (
+            prefix_str.upper().startswith("PHẦN") and re.match(r"^PHẦN\b", existing_txt, flags=re.IGNORECASE)
+        ):
+            prefix_str = ""
 
         pPr_rPr = pPr.find(qn("w:rPr"))
         lvl_rPr = lvl_info["rPr"]
@@ -1704,6 +1677,20 @@ def convert_numbering_to_text_in_doc(doc: DocxDocument) -> int:
                     st_pPr.remove(st_numPr)
 
     return converted_count
+
+
+def preprocess_docx_numbering_to_text(docx_bytes: bytes) -> Tuple[bytes, int]:
+    """
+    Tác vụ độc lập duy nhất: Chuyển toàn bộ Numbering tự động sang Text trước khi nạp vào bộ phân tích & trộn đề.
+    Trả về (docx_bytes_đã_chuyển, số_mục_numbering_đã_chuyển).
+    """
+    doc = docx.Document(io.BytesIO(docx_bytes))
+    converted = convert_numbering_to_text_in_doc(doc)
+    if converted > 0:
+        out = io.BytesIO()
+        doc.save(out)
+        return out.getvalue(), converted
+    return docx_bytes, 0
 
 
 def parse_docx_exam(docx_bytes: bytes) -> ParsedExam:
@@ -2022,6 +2009,11 @@ def _format_run(
     rPr.rFonts.set(qn("w:eastAsia"), font_name)
     rPr.rFonts.set(qn("w:cs"), font_name)
     run.font.size = Pt(size_pt)
+    sz_cs = rPr.find(qn("w:szCs"))
+    if sz_cs is None:
+        sz_cs = OxmlElement("w:szCs")
+        rPr.append(sz_cs)
+    sz_cs.set(qn("w:val"), str(int(round(size_pt * 2))))
     run.bold = bold
     run.italic = italic
     run.underline = underline
@@ -2043,12 +2035,15 @@ def _append_word_field_to_paragraph(
     italic: bool = False,
     bold: bool = False,
 ) -> None:
-    """Chèn một trường động của Word (như PAGE hoặc NUMPAGES) với cờ w:dirty=true để Word tự động cập nhật."""
+    """
+    Chèn trường PAGE hoặc NUMPAGES chuẩn OpenXML.
+    Lưu ý: KHÔNG gắn w:dirty="true" trên trường nằm ở bảng đầu trang 1 vì Word sẽ tính NUMPAGES ngay khi mới dựng
+    trang 1 (lúc tổng số trang đang là 1) và ghi đè thành '1 trang'.
+    """
     r_begin = p.add_run()
     _format_run(r_begin, font_name=font_name, size_pt=size_pt, italic=italic, bold=bold)
     fld_begin = OxmlElement("w:fldChar")
     fld_begin.set(qn("w:fldCharType"), "begin")
-    fld_begin.set(qn("w:dirty"), "true")
     r_begin._element.append(fld_begin)
 
     r_instr = p.add_run()
@@ -2074,90 +2069,55 @@ def _append_word_field_to_paragraph(
     r_end._element.append(fld_end)
 
 
-def _append_numpages_field_to_paragraph(p, default_pages: str = "4", font_name="Times New Roman", size_pt=12, italic=True):
-    """Chèn trường tự động đếm tổng số trang của Word: 'Đề gồm: <NUMPAGES> trang'."""
-    r1 = p.add_run("Đề gồm: ")
-    _format_run(r1, font_name=font_name, size_pt=size_pt, italic=italic)
-    _append_word_field_to_paragraph(p, "NUMPAGES", default_val=default_pages, font_name=font_name, size_pt=size_pt, italic=italic)
-    r2 = p.add_run(" trang")
-    _format_run(r2, font_name=font_name, size_pt=size_pt, italic=italic)
+def _set_rPr_size_12pt(rPr: OxmlElement) -> None:
+    """Đặt cỡ chữ chuẩn 12pt (24 half-points) cho cả w:sz và w:szCs trong <w:rPr>."""
+    for tag_name in ("w:sz", "w:szCs"):
+        el = rPr.find(qn(tag_name))
+        if el is None:
+            el = OxmlElement(tag_name)
+            rPr.append(el)
+        el.set(qn("w:val"), "24")
 
 
-def _enable_auto_update_fields_in_settings(doc: DocxDocument) -> None:
-    """Bật cờ <w:updateFields w:val="true"/> trong word/settings.xml để Word luôn cập nhật số trang NUMPAGES."""
+def _normalize_doc_font_size_12pt(doc: DocxDocument) -> None:
+    """
+    Chuẩn hóa toàn bộ cỡ chữ trong đề xuất ra (cả styles.xml và mọi đoạn văn/run trong body)
+    về cùng cỡ chữ 12pt (24 half-points), ngoại trừ nội dung bên trong hộp văn bản hình vẽ (<w:txbxContent>).
+    """
+    def walk_and_normalize_body(node: OxmlElement) -> None:
+        ln = node.tag.split("}")[-1] if "}" in node.tag else node.tag
+        if ln == "txbxContent":
+            return
+        if node.tag == qn("w:pPr"):
+            p_rPr = node.find(qn("w:rPr"))
+            if p_rPr is not None:
+                _set_rPr_size_12pt(p_rPr)
+            return
+        if node.tag in (qn("w:r"), qn("m:r")):
+            rPr = node.find(qn("w:rPr"))
+            if rPr is None:
+                rPr = OxmlElement("w:rPr")
+                node.insert(0, rPr)
+            _set_rPr_size_12pt(rPr)
+        for child in node:
+            walk_and_normalize_body(child)
+
+    walk_and_normalize_body(doc.element.body)
+
     try:
-        settings_el = doc.settings.element
-        if settings_el is not None:
-            upd = settings_el.find(qn("w:updateFields"))
-            if upd is None:
-                upd = OxmlElement("w:updateFields")
-                settings_el.append(upd)
-            upd.set(qn("w:val"), "true")
+        styles_el = doc.styles.element
+        if styles_el is not None:
+            for rPr in styles_el.findall(".//" + qn("w:rPr")):
+                _set_rPr_size_12pt(rPr)
     except Exception:
         pass
-
-
-def _estimate_body_page_count(body_el: OxmlElement, source_docx_bytes: Optional[bytes] = None) -> int:
-    """
-    Ước lượng chính xác số trang của đề xuất ra dựa trên tổng chiều cao (pt) của các đoạn văn,
-    công thức MathType/OMML, bảng biểu và hình vẽ trên khổ A4 (lề trên 11mm, lề dưới 11mm).
-    """
-    import math
-    total_height_pt = 0.0
-    for child in body_el:
-        if child.tag == qn("w:sectPr"):
-            continue
-        if child.tag == qn("w:tbl"):
-            rows = child.findall(".//" + qn("w:tr"))
-            total_height_pt += max(1, len(rows)) * 52.0 + 10.0
-            continue
-        if child.tag == qn("w:p"):
-            vis_chars = _measure_xml_node_visual_chars(child)
-            br_count = len(child.findall(".//" + qn("w:br"))) + len(child.findall(".//" + qn("w:cr")))
-            lines = max(1, int(math.ceil(vis_chars / 82.0)) + br_count)
-            inline_extras: List[float] = []
-            block_extra = 0.0
-            for sub in child.iter():
-                s_ln = sub.tag.split("}")[-1] if "}" in sub.tag else sub.tag
-                if s_ln == "extent":
-                    cy_s = sub.get("cy")
-                    if cy_s:
-                        try:
-                            h_pt = float(cy_s) / 12700.0
-                            if h_pt > 45.0:
-                                block_extra += h_pt + 8.0
-                            elif h_pt > 15.0:
-                                inline_extras.append(h_pt - 13.0)
-                        except ValueError:
-                            pass
-                elif s_ln == "shape":
-                    st_s = sub.get("style") or ""
-                    m_h = re.search(r"(?:^|;|\s)height\s*:\s*([\d\.,]+)\s*(pt|in|cm|mm|px)\b", st_s, flags=re.IGNORECASE)
-                    if m_h:
-                        h_pt = _convert_css_dim_to_pt(m_h.group(1), m_h.group(2))
-                        if h_pt > 45.0:
-                            block_extra += h_pt + 8.0
-                        elif h_pt > 15.0:
-                            inline_extras.append(h_pt - 13.0)
-                elif s_ln == "oMath":
-                    has_tall_math = any(
-                        (m_sub.tag.split("}")[-1] if "}" in m_sub.tag else m_sub.tag) in ("f", "rad", "nary", "eqArr")
-                        for m_sub in sub.iter()
-                    )
-                    inline_extras.append(14.5 if has_tall_math else 4.5)
-            inline_extras.sort(reverse=True)
-            top_inline_extra = sum(inline_extras[: max(1, lines)])
-            total_height_pt += lines * 16.5 + 4.0 + block_extra + min(lines * 18.0, top_inline_extra)
-
-    est_pages = max(1, int(math.ceil(total_height_pt / 710.0)))
-    return est_pages
 
 
 def _configure_section_headers_and_footers(doc: DocxDocument, exam_code: str) -> None:
     """
     Đồng bộ toàn bộ Header và Footer của tài liệu với mã đề `exam_code`:
     - Xóa nội dung header cũ (nếu đề gốc có header thừa).
-    - Đặt nội dung Footer chuẩn: 'Trang <PAGE>/<NUMPAGES> - Mã đề thi <exam_code>'
+    - Đặt nội dung Footer chuẩn: 'Trang <PAGE>/<NUMPAGES> - Mã đề <exam_code>'
       cho tất cả các loại footer (footer chính, first_page_footer, even_page_footer)
       mà vẫn giữ nguyên căn lề `<w:pPr>` của footer gốc (hoặc căn giữa nếu chưa có).
     """
@@ -2171,7 +2131,7 @@ def _configure_section_headers_and_footers(doc: DocxDocument, exam_code: str) ->
                     for r in list(p._element.findall(qn("w:r"))):
                         p._element.remove(r)
 
-        # Cập nhật tất cả các footer để luôn hiển thị đúng: "Trang X/Y - Mã đề thi <exam_code>"
+        # Cập nhật tất cả các footer để luôn hiển thị đúng: "Trang X/Y - Mã đề <exam_code>"
         for ftr in (section.footer, section.first_page_footer, section.even_page_footer):
             if ftr is None:
                 continue
@@ -2206,7 +2166,7 @@ def _configure_section_headers_and_footers(doc: DocxDocument, exam_code: str) ->
             r_slash = p_ftr.add_run("/")
             _format_run(r_slash, size_pt=12)
             _append_word_field_to_paragraph(p_ftr, "NUMPAGES", default_val="4", size_pt=12)
-            r_code = p_ftr.add_run(f" - Mã đề thi {exam_code}")
+            r_code = p_ftr.add_run(f" - Mã đề {exam_code}")
             _format_run(r_code, size_pt=12)
 
 
@@ -2218,7 +2178,6 @@ def generate_single_variant_docx(
     rng: random.Random,
 ) -> ShuffledVariantResult:
     doc = docx.Document(io.BytesIO(source_docx_bytes))
-    convert_numbering_to_text_in_doc(doc)
     body = doc.element.body
 
     sectPr = body.find(qn("w:sectPr"))
@@ -2261,9 +2220,8 @@ def generate_single_variant_docx(
     p_left.paragraph_format.line_spacing = 1.15
     r_gov = p_left.add_run(meta.governing_body.upper() + "\n")
     _format_run(r_gov, size_pt=12, bold=False)
-    r_sch = p_left.add_run(meta.school_name.upper() + "\n")
+    r_sch = p_left.add_run(meta.school_name.upper())
     _format_run(r_sch, size_pt=12, bold=True, underline=False)
-    _append_numpages_field_to_paragraph(p_left, size_pt=12, italic=True)
 
     p_right = cell_right.paragraphs[0]
     p_right.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -2458,47 +2416,11 @@ def generate_single_variant_docx(
     p_end.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p_end.paragraph_format.space_before = Pt(8)
     r_end = p_end.add_run("-------------- HẾT --------------\n")
-    _format_run(r_end, size_pt=11, bold=True)
+    _format_run(r_end, size_pt=12, bold=True)
     r_note = p_end.add_run("(Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm)")
-    _format_run(r_note, size_pt=10.5, italic=True)
+    _format_run(r_note, size_pt=12, italic=True)
 
-    _enable_auto_update_fields_in_settings(doc)
-    est_pages_str = str(_estimate_body_page_count(body, source_docx_bytes))
-    # Cập nhật giá trị hiển thị mặc định của trường NUMPAGES trong bảng tiêu đề và footer
-    for fld_instr in body.findall(".//" + qn("w:instrText")):
-        if fld_instr.text and "NUMPAGES" in fld_instr.text:
-            r_parent = fld_instr.getparent()
-            if r_parent is not None:
-                nxt = r_parent.getnext()
-                while nxt is not None and nxt.tag == qn("w:r"):
-                    if nxt.find(qn("w:fldChar")) is not None:
-                        fc_el = nxt.find(qn("w:fldChar"))
-                        if (fc_el.get(qn("w:fldCharType")) or fc_el.get("fldCharType")) == "end":
-                            break
-                    else:
-                        t_el = nxt.find(qn("w:t"))
-                        if t_el is not None:
-                            t_el.text = est_pages_str
-                    nxt = nxt.getnext()
-
-    for section in doc.sections:
-        for ftr in (section.footer, section.first_page_footer, section.even_page_footer):
-            if ftr is not None:
-                for fld_instr in ftr._element.findall(".//" + qn("w:instrText")):
-                    if fld_instr.text and "NUMPAGES" in fld_instr.text:
-                        r_parent = fld_instr.getparent()
-                        if r_parent is not None:
-                            nxt = r_parent.getnext()
-                            while nxt is not None and nxt.tag == qn("w:r"):
-                                if nxt.find(qn("w:fldChar")) is not None:
-                                    fc_el = nxt.find(qn("w:fldChar"))
-                                    if (fc_el.get(qn("w:fldCharType")) or fc_el.get("fldCharType")) == "end":
-                                        break
-                                else:
-                                    t_el = nxt.find(qn("w:t"))
-                                    if t_el is not None:
-                                        t_el.text = est_pages_str
-                                nxt = nxt.getnext()
+    _normalize_doc_font_size_12pt(doc)
 
     out_buf = io.BytesIO()
     doc.save(out_buf)
