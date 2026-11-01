@@ -3457,7 +3457,7 @@
         const convNote = numConv.convertedCount > 0 ? ` • Đã chuyển ${numConv.convertedCount} mục Numbering → Text` : "";
         document.getElementById("dropZoneSub").textContent = `Dung lượng ${(currentDocxBuffer.byteLength / 1024).toFixed(1)} KB${convNote} • Nhấn để đổi file khác`;
         const badge = document.getElementById("fileStatusBadge");
-        badge.textContent = numConv.convertedCount > 0 ? `Đã chuyển Numbering (${numConv.convertedCount}) & Sẵn sàng` : "Đã sẵn sàng trộn";
+        badge.textContent = numConv.convertedCount > 0 ? `Đã chuyển ${numConv.convertedCount} Numbering` : "Đã sẵn sàng trộn";
         badge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
 
         currentParsedExam = await parseDocxInBrowser(currentDocxBuffer);
@@ -3766,7 +3766,6 @@
 
 
 <!-- Chống View Code HTML -->
-
 
 <script>
     // 1. Chặn nhấp chuột phải
