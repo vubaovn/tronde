@@ -66,6 +66,9 @@
         <button type="button" id="tabBtnFormat" data-tab="format" class="tab-nav-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
           QUY ƯỚC ĐỀ GỐC (.docx)
         </button>
+        <a href="mathEQ/mathEQ.html" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
+          CÔNG THỨC TOÁN
+        </a>
 		
 		
 		<!--
@@ -3457,7 +3460,7 @@
         const convNote = numConv.convertedCount > 0 ? ` • Đã chuyển ${numConv.convertedCount} mục Numbering → Text` : "";
         document.getElementById("dropZoneSub").textContent = `Dung lượng ${(currentDocxBuffer.byteLength / 1024).toFixed(1)} KB${convNote} • Nhấn để đổi file khác`;
         const badge = document.getElementById("fileStatusBadge");
-        badge.textContent = numConv.convertedCount > 0 ? `Đã chuyển ${numConv.convertedCount} Numbering` : "Đã sẵn sàng trộn";
+        badge.textContent = numConv.convertedCount > 0 ? `Đã chuyển Numbering (${numConv.convertedCount}) & Sẵn sàng` : "Đã sẵn sàng trộn";
         badge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
 
         currentParsedExam = await parseDocxInBrowser(currentDocxBuffer);
