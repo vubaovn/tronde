@@ -118,7 +118,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-2.5 shrink-0">
           <button type="button" id="btnLoadSampleToApp" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow transition flex items-center gap-2">
-            <span>⚡ Nạp đề mẫu có Công thức & Hình vẽ để trộn thử</span>
+            <span>⚡ Nạp file mẫu</span>
           </button>
           <button type="button" id="btnDownloadSampleDocx" class="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs sm:text-sm border border-white/20 transition">
             ⬇ Tải File đề gốc mẫu (.docx)
@@ -134,27 +134,37 @@
 
           <!-- Step 1: Upload Word File -->
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2.5">
                 <span class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</span>
-                <h3 class="font-bold text-slate-900 text-sm sm:text-base">TẢI LÊN ĐỀ GỐC(.docx)</h3>
+                <h3 class="font-bold text-slate-900 text-sm sm:text-base">NẠP ĐỀ GỐC(.docx)</h3>
               </div>
-              <span id="fileStatusBadge" class="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                Chưa chọn file
-              </span>
+              <div class="flex items-center gap-2">
+                <button type="button" id="btnLoadSampleQuick" class="px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-slate-950 font-bold text-xs shadow-sm border border-amber-500/40 transition flex items-center gap-1">
+                  <span>⚡ Nạp đề mẫu</span>
+                </button>
+                <span id="fileStatusBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                  Chưa chọn file
+                </span>
+              </div>
             </div>
 
             <!-- Drag and Drop Box -->
-            <div id="dropZone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-6 text-center transition cursor-pointer bg-slate-50/70">
+            <div id="dropZone" class="group relative border-2 border-dashed border-blue-500 hover:border-blue-700 rounded-xl p-6 text-center transition-all duration-200 cursor-pointer bg-gradient-to-b from-blue-50/90 via-indigo-50/50 to-blue-50/90 hover:from-blue-100/90 hover:to-indigo-100/80 shadow-sm hover:shadow-md ring-2 ring-blue-500/15 hover:ring-blue-600/30">
               <input type="file" id="fileInputDocx" accept=".docx" class="hidden" />
-              <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 mx-auto flex items-center justify-center mb-3 font-bold text-xl">
+              <div id="dropZoneIcon" class="w-14 h-14 rounded-2xl bg-blue-600 group-hover:bg-blue-700 text-white mx-auto flex items-center justify-center mb-3 font-extrabold text-xl shadow-md shadow-blue-600/25 group-hover:scale-105 transition-transform">
                 W
               </div>
-              <p class="text-sm font-semibold text-slate-800" id="dropZoneTitle">
-                Nhấn để chọn file Word (.docx) hoặc kéo thả vào đây
+              <p class="text-sm sm:text-base font-extrabold text-blue-900 group-hover:text-blue-700" id="dropZoneTitle">
+                👉 BẤM VÀO ĐÂY ĐỂ NẠP FILE ĐỀ GỐC (.docx)
               </p>
-              <p class="text-xs text-slate-500 mt-1" id="dropZoneSub">
-                Hỗ trợ đề thi chứa công thức MathType, Word Equation, hình vẽ, bảng biểu
+              <div class="mt-2.5">
+                <span id="dropZoneActionPill" class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-600 group-hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition">
+                  📂 Chọn file Word (.docx) từ máy tính
+                </span>
+              </div>
+              <p class="text-xs text-slate-600 font-medium mt-2.5" id="dropZoneSub">
+                Hoặc kéo thả file .docx vào khung này • Hỗ trợ MathType, Equation, Hình vẽ, Bảng biểu
               </p>
             </div>
 
@@ -306,7 +316,7 @@
             <!-- View 3A: Parsed Questions Inspection -->
             <div id="viewParsedQuestions" class="space-y-3 max-h-[540px] overflow-y-auto custom-scrollbar pr-1">
               <div class="text-center py-12 text-slate-400 text-sm">
-                Chưa có dữ liệu đề thi. Hãy chọn một file <strong>.docx</strong> ở khung bên trái hoặc bấm nút <strong>"⚡ Nạp Đề Mẫu Có Công Thức & Hình Vẽ"</strong> ở phía trên.
+                Chưa có dữ liệu đề thi. Hãy bấm vào khung <strong>"TẢI LÊN ĐỀ GỐC(.docx)"</strong> ở bên trái để nạp file cần trộn hoặc bấm nút <strong>"⚡ Nạp file mẫu"</strong> để trộn thử.
               </div>
             </div>
 
@@ -3463,12 +3473,27 @@
         const numConv = await convertDocxNumberingToTextInBrowser(buffer);
         currentDocxBuffer = numConv.buffer;
         currentFileName = filename;
-        document.getElementById("dropZoneTitle").textContent = `Đã nạp: ${filename}`;
+        const dropZoneEl = document.getElementById("dropZone");
+        if (dropZoneEl) {
+          dropZoneEl.className = "group relative border-2 border-dashed border-emerald-500 hover:border-blue-600 rounded-xl p-6 text-center transition-all duration-200 cursor-pointer bg-emerald-50/50 hover:bg-blue-50/70 shadow-sm hover:shadow-md";
+        }
+        const dropZoneIconEl = document.getElementById("dropZoneIcon");
+        if (dropZoneIconEl) {
+          dropZoneIconEl.className = "w-14 h-14 rounded-2xl bg-emerald-600 group-hover:bg-blue-600 text-white mx-auto flex items-center justify-center mb-3 font-extrabold text-xl shadow-md transition-transform group-hover:scale-105";
+        }
+        const dropZoneTitleEl = document.getElementById("dropZoneTitle");
+        dropZoneTitleEl.textContent = `Đã nạp: ${filename}`;
+        dropZoneTitleEl.className = "text-sm sm:text-base font-extrabold text-emerald-950 group-hover:text-blue-900";
+        const actionPillEl = document.getElementById("dropZoneActionPill");
+        if (actionPillEl) {
+          actionPillEl.textContent = "🔄 Nhấp vào đây để Nạp đề gốc khác";
+          actionPillEl.className = "inline-flex items-center gap-1.5 px-3.5 py-1 rounded-lg bg-white group-hover:bg-blue-600 text-emerald-800 group-hover:text-white border border-emerald-300 group-hover:border-blue-600 font-semibold text-xs shadow-sm transition";
+        }
         const convNote = numConv.convertedCount > 0 ? ` • Đã chuyển ${numConv.convertedCount} mục Numbering → Text` : "";
-        document.getElementById("dropZoneSub").textContent = `Dung lượng ${(currentDocxBuffer.byteLength / 1024).toFixed(1)} KB${convNote} • Nhấn để đổi file khác`;
+        document.getElementById("dropZoneSub").textContent = `Dung lượng ${(currentDocxBuffer.byteLength / 1024).toFixed(1)} KB${convNote}`;
         const badge = document.getElementById("fileStatusBadge");
         badge.textContent = numConv.convertedCount > 0 ? `Đã chuyển Numbering (${numConv.convertedCount}) & Sẵn sàng` : "Đã sẵn sàng trộn";
-        badge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
+        badge.className = "text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300";
 
         currentParsedExam = await parseDocxInBrowser(currentDocxBuffer);
         renderParsedQuestionsPreview(currentParsedExam);
@@ -3527,8 +3552,14 @@
 
     async function handleRunShuffle() {
       if (!currentDocxBuffer || !currentParsedExam) {
-        const bytes = base64ToUint8Array(EMBEDDED_SAMPLE_DOCX_B64);
-        await loadDocxArrayBuffer(bytes.buffer, "De_Goc_Mau_Chuan_2025.docx");
+        showToast("Vui lòng bấm vào khung TẢI LÊN ĐỀ GỐC (.docx) để nạp file cần trộn, hoặc bấm nút \"Nạp file mẫu\" để trộn thử!", true);
+        const dz = document.getElementById("dropZone");
+        if (dz) {
+          dz.scrollIntoView({ behavior: "smooth", block: "center" });
+          dz.classList.add("ring-4", "ring-amber-400");
+          setTimeout(() => dz.classList.remove("ring-4", "ring-amber-400"), 2200);
+        }
+        return;
       }
 
       const btn = document.getElementById("btnRunShuffle");
@@ -3700,10 +3731,16 @@
         await loadDocxArrayBuffer(buf, f.name);
       });
 
-      document.getElementById("btnLoadSampleToApp").addEventListener("click", async () => {
+      async function handleLoadSampleToApp() {
         const bytes = base64ToUint8Array(EMBEDDED_SAMPLE_DOCX_B64);
         await loadDocxArrayBuffer(bytes.buffer, "De_Goc_Mau_Chuan_2025.docx");
-      });
+      }
+
+      document.getElementById("btnLoadSampleToApp").addEventListener("click", handleLoadSampleToApp);
+      const btnQuickSample = document.getElementById("btnLoadSampleQuick");
+      if (btnQuickSample) {
+        btnQuickSample.addEventListener("click", handleLoadSampleToApp);
+      }
 
       function triggerSampleDownload() {
         const bytes = base64ToUint8Array(EMBEDDED_SAMPLE_DOCX_B64);
@@ -3767,8 +3804,7 @@
         document.body.removeChild(ta);
       });
 
-      const initBytes = base64ToUint8Array(EMBEDDED_SAMPLE_DOCX_B64);
-      loadDocxArrayBuffer(initBytes.buffer, "De_Goc_Mau_Chuan_2025.docx");
+      // Không tự động nạp file mẫu khi mở trang; chờ người dùng chọn file hoặc bấm nút "Nạp file mẫu"
     });
   </script>
   
