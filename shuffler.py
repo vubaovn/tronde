@@ -1092,10 +1092,10 @@ def build_part1_options_paragraphs(
 
     if len(opts) == 4 and max_len <= 21:
         cols_per_row = 4
-        tab_stops = [3040, 5655, 8270]
+        tab_stops = [2934, 5584, 8235]
     elif len(opts) == 4 and max_len <= 48:
         cols_per_row = 2
-        tab_stops = [5655]
+        tab_stops = [5584]
     else:
         cols_per_row = 1
         tab_stops = []
@@ -1110,7 +1110,7 @@ def build_part1_options_paragraphs(
                         el,
                         f"{letter}. ",
                         color_hex=label_color_hex,
-                        left_indent_dxa=425,
+                        left_indent_dxa=283,
                     )
                     out_paras.append(labeled_opt)
                 else:
@@ -1139,7 +1139,7 @@ def build_part1_options_paragraphs(
         pPr.append(spacing)
 
         ind = OxmlElement("w:ind")
-        ind.set(qn("w:left"), "425")
+        ind.set(qn("w:left"), "283")
         pPr.append(ind)
 
         row_p.append(pPr)
@@ -2298,8 +2298,8 @@ def generate_single_variant_docx(
                         stem_el,
                         f"Câu {idx}. ",
                         color_hex=None,
-                        left_indent_dxa=425,
-                        hanging_indent_dxa=425,
+                        left_indent_dxa=283,
+                        hanging_indent_dxa=283,
                     )
                     append_element_to_body(new_stem)
                 else:
@@ -2348,8 +2348,8 @@ def generate_single_variant_docx(
                         stem_el,
                         f"Câu {idx}. ",
                         color_hex=None,
-                        left_indent_dxa=425,
-                        hanging_indent_dxa=425,
+                        left_indent_dxa=283,
+                        hanging_indent_dxa=283,
                     )
                     append_element_to_body(new_stem)
                 else:
@@ -2373,7 +2373,7 @@ def generate_single_variant_docx(
                             el,
                             f"{letter}) ",
                             color_hex=BLUE_HEX,
-                            left_indent_dxa=425,
+                            left_indent_dxa=283,
                         )
                         append_element_to_body(labeled_opt)
                     else:
@@ -2404,8 +2404,8 @@ def generate_single_variant_docx(
                         stem_el,
                         f"Câu {idx}. ",
                         color_hex=None,
-                        left_indent_dxa=425,
-                        hanging_indent_dxa=425,
+                        left_indent_dxa=283,
+                        hanging_indent_dxa=283,
                     )
                     append_element_to_body(new_stem)
                 else:
