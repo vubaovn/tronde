@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TRONDE 2025 - Phần Mềm Trộn Đề Trắc Nghiệm Trực Tuyến (Chuẩn 3 Phần GDPT 2018)</title>
+  <title>TRONDE 2025 - Trộn đề Trắc nghiệm Trực Tuyến (Chuẩn 3 phần của Bộ Giáo dục năm 2025)</title>
   <link href="https://www.vubao.io.vn/favicon.ico" rel="icon" type="image/x-icon"/>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -61,16 +61,18 @@
       <!-- Navigation Tabs -->
       <nav class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
         <button type="button" id="tabBtnWorkspace" data-tab="workspace" class="tab-nav-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-white text-blue-700 shadow-sm">
-          TRỘN ĐỀ NGAY
+			TRỘN ĐỀ NGAY
         </button>
         <button type="button" id="tabBtnFormat" data-tab="format" class="tab-nav-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
-          QUY ƯỚC ĐỀ GỐC (.docx)
+			QUY ƯỚC ĐỀ GỐC (.docx)
         </button>
-        <a href="mathEQ/mathEQ.html" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-blue-600 text-white hover:bg-blue-700 shadow-sm">
-          CÔNG THỨC
+		
+		<button type="button" id="tabBtnDeploy" data-tab="deploy" class="tab-nav-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
+        <a href="mathEQ/mathEQ.html" target="_blank">
+			CÔNG THỨC
 		</a>
-
-
+		</button>
+		
 		
 		
 		<!--
@@ -78,9 +80,12 @@
           TẢI MÃ NGUỒN (v3.1)
         </button>
 		-->
-		
-		
+
+
       </nav>
+	  
+	  
+	  
     </div>
   </header>
 
