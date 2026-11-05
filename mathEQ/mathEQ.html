@@ -36,7 +36,7 @@
         <div>
           <div class="flex flex-wrap items-center gap-2">
             <h1 class="text-lg sm:text-xl font-bold tracking-tight">TRONDE • CHUYỂN ĐỔI 2 CHIỀU MATHTYPE ⇄ EQUATION</h1>
-            <span class="bg-amber-400/20 text-amber-200 border border-amber-300/40 text-xs font-semibold px-2.5 py-0.5 rounded-full">Version 1.6</span>
+            <span class="bg-amber-400/20 text-amber-200 border border-amber-300/40 text-xs font-semibold px-2.5 py-0.5 rounded-full">Version 1.7</span>
             <span class="bg-emerald-400/20 text-emerald-200 border border-emerald-400/40 text-xs font-semibold px-2.5 py-0.5 rounded-full">Chạy trực tiếp</span>
           </div>
           <p class="text-xs text-indigo-100 mt-0.5">
@@ -114,16 +114,16 @@
             <div class="flex items-center justify-between">
               <h2 id="step2Heading" class="text-sm sm:text-base font-bold text-slate-800">Bước 2: Chọn file đề thi / tài liệu Word (.docx) cần chuyển sang Equation</h2>
             </div>
-            <label for="docxInput" id="dropZone" class="flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 bg-indigo-50/30 hover:bg-indigo-50/70 rounded-2xl p-6 sm:p-7 cursor-pointer transition text-center">
+            <label for="docxInput" id="dropZone" class="flex flex-col items-center justify-center border-2 border-dashed border-blue-600 ring-4 ring-blue-100/80 bg-blue-50/50 hover:bg-blue-50/90 rounded-2xl p-6 sm:p-7 cursor-pointer transition text-center">
               <input type="file" id="docxInput" accept=".docx" class="hidden">
-              <div id="dropZoneIcon" class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-bold mb-2.5">
-                📄
+              <div id="dropZoneIcon" class="w-16 h-16 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/30 flex items-center justify-center text-2xl font-extrabold tracking-tight mb-3 select-none">
+                W
               </div>
-              <p id="selectedFileTitle" class="text-sm font-semibold text-indigo-900">
+              <p id="selectedFileTitle" class="text-sm sm:text-base font-bold text-blue-900">
                 Nhấn vào đây để chọn file Word (.docx) hoặc kéo thả file vào khung này
               </p>
-              <p id="selectedFileSub" class="text-xs text-slate-500 mt-1">
-                Tự động chuyển đổi MathType sang Word Equation và tải file <strong class="text-indigo-700">_Equation.docx</strong> về máy
+              <p id="selectedFileSub" class="text-xs text-slate-600 mt-1">
+                Tự động chuyển đổi MathType sang Word Equation và tải file <strong class="text-blue-700">_Equation.docx</strong> về máy
               </p>
             </label>
           </div>
@@ -188,7 +188,7 @@
           </div>
 
           <div id="modeInfoCard" class="bg-emerald-50/90 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-900 space-y-1.5">
-            <p id="modeInfoTitle" class="font-bold">✅ Version 1.6 • Chạy trực tiếp như TRONDE:</p>
+            <p id="modeInfoTitle" class="font-bold">✅ Version 1.7 • Chạy trực tiếp như TRONDE:</p>
             <p id="modeInfoBody" class="leading-relaxed">
               • <strong>Chiều 1 (MathType ➔ Equation):</strong> Giải mã nhị phân OLE/WMF sang <code class="bg-emerald-100 px-1 rounded font-semibold">&lt;m:oMath&gt;</code>, tự động canh trái hệ phương trình và chuẩn hóa trị tuyệt đối.<br>
               • <strong>Chiều 2 (Equation ➔ MathType):</strong> Chuyển công thức sang đối tượng MathType chuẩn kèm ảnh hiển thị sắc nét, nhấp đúp sửa ngay trong MathType.
@@ -4442,14 +4442,14 @@
           step2Heading.textContent = "Bước 2: Chọn file đề thi / tài liệu Word (.docx) cần chuyển sang Equation";
         }
         if (dropZone) {
-          dropZone.className = "flex flex-col items-center justify-center border-2 border-dashed border-indigo-300 bg-indigo-50/30 hover:bg-indigo-50/70 rounded-2xl p-6 sm:p-7 cursor-pointer transition text-center";
+          dropZone.className = "flex flex-col items-center justify-center border-2 border-dashed border-blue-600 ring-4 ring-blue-100/80 bg-blue-50/50 hover:bg-blue-50/90 rounded-2xl p-6 sm:p-7 cursor-pointer transition text-center";
         }
         if (dropZoneIcon) {
-          dropZoneIcon.className = "w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-bold mb-2.5";
+          dropZoneIcon.className = "w-16 h-16 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/30 flex items-center justify-center text-2xl font-extrabold tracking-tight mb-3 select-none";
         }
         if (!currentFileBytes) {
-          if (titleText) titleText.className = "text-sm font-semibold text-indigo-900";
-          if (subText) subText.innerHTML = 'Tự động chuyển đổi MathType sang Word Equation và tải file <strong class="text-indigo-700">_Equation.docx</strong> về máy';
+          if (titleText) titleText.className = "text-sm sm:text-base font-bold text-blue-900";
+          if (subText) subText.innerHTML = 'Tự động chuyển đổi MathType sang Word Equation và tải file <strong class="text-blue-700">_Equation.docx</strong> về máy';
         }
 
         // Contextual options for Chieu 1
@@ -4491,14 +4491,14 @@
           step2Heading.textContent = "Bước 2: Chọn file đề thi / tài liệu Word (.docx) cần chuyển sang MathType";
         }
         if (dropZone) {
-          dropZone.className = "flex flex-col items-center justify-center border-2 border-dashed border-violet-300 bg-violet-50/30 hover:bg-violet-50/70 rounded-2xl p-6 sm:p-7 cursor-pointer transition text-center";
+          dropZone.className = "flex flex-col items-center justify-center border-2 border-dashed border-blue-600 ring-4 ring-blue-100/80 bg-blue-50/50 hover:bg-blue-50/90 rounded-2xl p-6 sm:p-7 cursor-pointer transition text-center";
         }
         if (dropZoneIcon) {
-          dropZoneIcon.className = "w-12 h-12 rounded-2xl bg-violet-100 text-violet-700 flex items-center justify-center text-xl font-bold mb-2.5";
+          dropZoneIcon.className = "w-16 h-16 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/30 flex items-center justify-center text-2xl font-extrabold tracking-tight mb-3 select-none";
         }
         if (!currentFileBytes) {
-          if (titleText) titleText.className = "text-sm font-semibold text-violet-900";
-          if (subText) subText.innerHTML = 'Tự động chuyển đổi Word Equation sang MathType và tải file <strong class="text-violet-700">_MathType.docx</strong> về máy';
+          if (titleText) titleText.className = "text-sm sm:text-base font-bold text-blue-900";
+          if (subText) subText.innerHTML = 'Tự động chuyển đổi Word Equation sang MathType và tải file <strong class="text-blue-700">_MathType.docx</strong> về máy';
         }
 
         // Contextual options for Chieu 2
@@ -4590,14 +4590,14 @@
     const dropZone = document.getElementById("dropZone");
     dropZone.addEventListener("dragover", (e) => {
       e.preventDefault();
-      dropZone.classList.add("bg-indigo-100/70");
+      dropZone.classList.add("bg-blue-100/80");
     });
     dropZone.addEventListener("dragleave", () => {
-      dropZone.classList.remove("bg-indigo-100/70");
+      dropZone.classList.remove("bg-blue-100/80");
     });
     dropZone.addEventListener("drop", async (e) => {
       e.preventDefault();
-      dropZone.classList.remove("bg-indigo-100/70");
+      dropZone.classList.remove("bg-blue-100/80");
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         const f = e.dataTransfer.files[0];
         currentFileName = f.name;
@@ -4645,7 +4645,7 @@
       return map;
     }
 
-    // CHIỀU 1 (Version 1.6): CHUYỂN MATHTYPE ➔ WORD EQUATION (<m:oMath>)
+    // CHIỀU 1 (Version 1.7): CHUYỂN MATHTYPE ➔ WORD EQUATION (<m:oMath>)
     async function processDocxInBrowser() {
       try {
         setConversionDirection("mt2eq");
