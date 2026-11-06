@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tron-de-trac-nghiem-2025
+    name: tronde
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
