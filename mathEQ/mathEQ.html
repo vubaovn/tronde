@@ -22,55 +22,22 @@
       text-align: left !important;
       math-style: normal;
     }
-    @keyframes step2BoxPulse {
+    @keyframes step2IconColorChange {
       0%, 100% {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 4px rgba(219, 234, 254, 0.8);
-        background-color: rgba(239, 246, 255, 0.5);
-        transform: translateX(0);
-      }
-      12% { transform: translateX(-5px); }
-      24% { transform: translateX(5px); }
-      36% { transform: translateX(-3px); }
-      48% { transform: translateX(3px); }
-      20%, 60% {
-        border-color: #f59e0b;
-        box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.35);
-        background-color: rgba(254, 243, 199, 0.65);
-      }
-      40%, 80% {
-        border-color: #dc2626;
-        box-shadow: 0 0 0 6px rgba(248, 113, 113, 0.35);
-        background-color: rgba(254, 226, 226, 0.55);
-      }
-    }
-    @keyframes step2TextBlink {
-      0%, 100% {
-        color: #1e3a8a;
-        transform: scale(1);
+        background-color: #2563eb;
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
       }
       25%, 75% {
-        color: #dc2626;
-        transform: scale(1.03);
+        background-color: #dc2626;
+        box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.4);
       }
       50% {
-        color: #d97706;
-        transform: scale(1.05);
+        background-color: #ea580c;
+        box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.4);
       }
     }
-    @keyframes step2IconBounce {
-      0%, 100% { transform: scale(1); background-color: #2563eb; }
-      30%, 70% { transform: scale(1.1); background-color: #ea580c; }
-      50% { transform: scale(0.96); background-color: #dc2626; }
-    }
-    .step2-attention-box {
-      animation: step2BoxPulse 1.6s ease-in-out 2;
-    }
-    .step2-attention-text {
-      animation: step2TextBlink 0.8s ease-in-out 4;
-    }
     .step2-attention-icon {
-      animation: step2IconBounce 0.8s ease-in-out 4;
+      animation: step2IconColorChange 0.8s ease-in-out 4;
     }
   </style>
 </head>
@@ -4646,11 +4613,7 @@
         clearTimeout(step2HighlightTimer);
         step2HighlightTimer = null;
       }
-      const dz = document.getElementById("dropZone");
-      const titleEl = document.getElementById("selectedFileTitle");
       const iconEl = document.getElementById("dropZoneIcon");
-      if (dz) dz.classList.remove("step2-attention-box");
-      if (titleEl) titleEl.classList.remove("step2-attention-text");
       if (iconEl) iconEl.classList.remove("step2-attention-icon");
     }
 
@@ -4668,16 +4631,12 @@
         step2El.scrollIntoView({ behavior: "smooth", block: "center" });
       }
 
-      const dz = document.getElementById("dropZone");
-      const titleEl = document.getElementById("selectedFileTitle");
       const iconEl = document.getElementById("dropZoneIcon");
       clearStep2Attention();
-      if (dz) {
-        void dz.offsetWidth; // trigger reflow to restart animation cleanly
-        dz.classList.add("step2-attention-box");
+      if (iconEl) {
+        void iconEl.offsetWidth; // trigger reflow to restart animation cleanly
+        iconEl.classList.add("step2-attention-icon");
       }
-      if (titleEl) titleEl.classList.add("step2-attention-text");
-      if (iconEl) iconEl.classList.add("step2-attention-icon");
 
       step2HighlightTimer = setTimeout(() => {
         clearStep2Attention();
@@ -5538,7 +5497,8 @@
         debugger;
     }, 100);
 </script>
-   
+  
+  
 </body>
 
   
