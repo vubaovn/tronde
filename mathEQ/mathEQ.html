@@ -22,6 +22,56 @@
       text-align: left !important;
       math-style: normal;
     }
+    @keyframes step2BoxPulse {
+      0%, 100% {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(219, 234, 254, 0.8);
+        background-color: rgba(239, 246, 255, 0.5);
+        transform: translateX(0);
+      }
+      12% { transform: translateX(-5px); }
+      24% { transform: translateX(5px); }
+      36% { transform: translateX(-3px); }
+      48% { transform: translateX(3px); }
+      20%, 60% {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.35);
+        background-color: rgba(254, 243, 199, 0.65);
+      }
+      40%, 80% {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 6px rgba(248, 113, 113, 0.35);
+        background-color: rgba(254, 226, 226, 0.55);
+      }
+    }
+    @keyframes step2TextBlink {
+      0%, 100% {
+        color: #1e3a8a;
+        transform: scale(1);
+      }
+      25%, 75% {
+        color: #dc2626;
+        transform: scale(1.03);
+      }
+      50% {
+        color: #d97706;
+        transform: scale(1.05);
+      }
+    }
+    @keyframes step2IconBounce {
+      0%, 100% { transform: scale(1); background-color: #2563eb; }
+      30%, 70% { transform: scale(1.1); background-color: #ea580c; }
+      50% { transform: scale(0.96); background-color: #dc2626; }
+    }
+    .step2-attention-box {
+      animation: step2BoxPulse 1.6s ease-in-out 2;
+    }
+    .step2-attention-text {
+      animation: step2TextBlink 0.8s ease-in-out 4;
+    }
+    .step2-attention-icon {
+      animation: step2IconBounce 0.8s ease-in-out 4;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
@@ -36,7 +86,7 @@
         <div>
           <div class="flex flex-wrap items-center gap-2">
             <h1 class="text-lg sm:text-xl font-bold tracking-tight">TRONDE • CHUYỂN ĐỔI 2 CHIỀU MATHTYPE ⇄ EQUATION</h1>
-            <span class="bg-amber-400/20 text-amber-200 border border-amber-300/40 text-xs font-semibold px-2.5 py-0.5 rounded-full">Version 1.7</span>
+            <span class="bg-amber-400/20 text-amber-200 border border-amber-300/40 text-xs font-semibold px-2.5 py-0.5 rounded-full">Version 1.6</span>
             <span class="bg-emerald-400/20 text-emerald-200 border border-emerald-400/40 text-xs font-semibold px-2.5 py-0.5 rounded-full">Chạy trực tiếp</span>
           </div>
           <p class="text-xs text-indigo-100 mt-0.5">
@@ -60,10 +110,28 @@
   <!-- Main Content -->
   <main class="max-w-5xl w-full mx-auto px-4 py-6 flex-1 space-y-6">
 
-    <!-- Toast Banner -->
+    <!-- Toast Banner (kept hidden for compatibility; notifications use floating bottom-right dark popup) -->
     <div id="toastBanner" class="hidden rounded-xl p-3.5 text-sm font-medium border flex items-center justify-between gap-3">
       <span id="toastText"></span>
       <button type="button" id="closeToastBtn" class="text-xs underline opacity-80 hover:opacity-100">Đóng</button>
+    </div>
+
+    <!-- Floating Bottom-Right Dark Toast Popup (TRONDE style) -->
+    <div id="floatingToast" class="fixed bottom-5 right-5 z-50 max-w-[440px] w-[calc(100vw-2rem)] sm:w-auto bg-[#111827] text-white rounded-2xl shadow-2xl border border-slate-700/80 px-4 py-3.5 flex items-start gap-3 transition-all duration-300 opacity-0 translate-y-4 pointer-events-none">
+      <span id="floatingToastIcon" class="mt-0.5 shrink-0 text-amber-400">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </span>
+      <div id="floatingToastText" class="text-[13.5px] leading-snug font-medium text-slate-100 pr-1 flex-1"></div>
+      <button type="button" id="closeFloatingToastBtn" class="text-slate-400 hover:text-white transition p-0.5 -mr-1 shrink-0" aria-label="Đóng thông báo">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
     <!-- TAB 1: DOCX CONVERTER -->
@@ -74,7 +142,7 @@
           <!-- Two-Way Direction Selector -->
           <div class="space-y-2">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Bước 1: Chọn chiều chuyển đổi</label>
+              <label class="text-sm font-bold uppercase tracking-wider text-zinc-900">BƯỚC 1: Chọn chiều chuyển đổi</label>
               <div>
                 <button type="button" id="loadSampleBtn" class="text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-xl transition">
                   ⚡ Thử ngay với đề mẫu MathType (.docx)
@@ -110,9 +178,9 @@
           </div>
 
           <!-- Step 2: File Dropzone -->
-          <div class="space-y-2">
+          <div id="step2Container" class="space-y-2 scroll-mt-6">
             <div class="flex items-center justify-between">
-              <h2 id="step2Heading" class="text-sm sm:text-base font-bold text-slate-800">Bước 2: Chọn file đề thi / tài liệu Word (.docx) cần chuyển sang Equation</h2>
+              <h2 id="step2Heading" class="text-sm sm:text-base font-bold text-slate-800">BƯỚC 2: Chọn file đề thi / tài liệu Word (.docx) cần chuyển sang Equation</h2>
             </div>
             <label for="docxInput" id="dropZone" class="flex flex-col items-center justify-center border-2 border-dashed border-blue-600 ring-4 ring-blue-100/80 bg-blue-50/50 hover:bg-blue-50/90 rounded-2xl p-6 sm:p-7 cursor-pointer transition text-center">
               <input type="file" id="docxInput" accept=".docx" class="hidden">
@@ -149,7 +217,7 @@
           <!-- Contextual Action Buttons (Only 1 primary conversion button shown per mode!) -->
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <button type="button" id="convertDocxBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-5 rounded-xl shadow-sm transition text-sm">
-              🔄 Chuyển đổi sang Equation chuẩn
+              🔄 Chuyển đổi sang Equation
             </button>
             <button type="button" id="convertEqToMtBtn" class="hidden flex-1 bg-violet-600 hover:bg-violet-700 text-white font-semibold py-3 px-5 rounded-xl shadow-sm transition text-sm">
               🔁 Chuyển đổi sang MathType
@@ -188,7 +256,7 @@
           </div>
 
           <div id="modeInfoCard" class="bg-emerald-50/90 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-900 space-y-1.5">
-            <p id="modeInfoTitle" class="font-bold">✅ Version 1.7 • Chạy trực tiếp như TRONDE:</p>
+            <p id="modeInfoTitle" class="font-bold">✅ Version 1.6 • Chạy trực tiếp như TRONDE:</p>
             <p id="modeInfoBody" class="leading-relaxed">
               • <strong>Chiều 1 (MathType ➔ Equation):</strong> Giải mã nhị phân OLE/WMF sang <code class="bg-emerald-100 px-1 rounded font-semibold">&lt;m:oMath&gt;</code>, tự động canh trái hệ phương trình và chuẩn hóa trị tuyệt đối.<br>
               • <strong>Chiều 2 (Equation ➔ MathType):</strong> Chuyển công thức sang đối tượng MathType chuẩn kèm ảnh hiển thị sắc nét, nhấp đúp sửa ngay trong MathType.
@@ -4439,7 +4507,7 @@
         if (convBtn2) convBtn2.classList.add("hidden");
 
         if (step2Heading) {
-          step2Heading.textContent = "Bước 2: Chọn file đề thi / tài liệu Word (.docx) cần chuyển sang Equation";
+          step2Heading.textContent = "BƯỚC 2: Chọn file đề thi / tài liệu Word (.docx) cần chuyển sang Equation";
         }
         if (dropZone) {
           dropZone.className = "flex flex-col items-center justify-center border-2 border-dashed border-blue-600 ring-4 ring-blue-100/80 bg-blue-50/50 hover:bg-blue-50/90 rounded-2xl p-6 sm:p-7 cursor-pointer transition text-center";
@@ -4488,7 +4556,7 @@
         if (convBtn1) convBtn1.classList.add("hidden");
 
         if (step2Heading) {
-          step2Heading.textContent = "Bước 2: Chọn file đề thi / tài liệu Word (.docx) cần chuyển sang MathType";
+          step2Heading.textContent = "BƯỚC 2: Chọn file đề thi / tài liệu Word (.docx) cần chuyển sang MathType";
         }
         if (dropZone) {
           dropZone.className = "flex flex-col items-center justify-center border-2 border-dashed border-blue-600 ring-4 ring-blue-100/80 bg-blue-50/50 hover:bg-blue-50/90 rounded-2xl p-6 sm:p-7 cursor-pointer transition text-center";
@@ -4535,20 +4603,91 @@
       if (currentFileBytes) await processEquationToMathTypeInBrowser();
     });
 
+    let toastHideTimer = null;
+    let step2HighlightTimer = null;
+
+    function hideFloatingToast() {
+      const pop = document.getElementById("floatingToast");
+      if (!pop) return;
+      pop.classList.add("opacity-0", "translate-y-4", "pointer-events-none");
+      pop.classList.remove("opacity-100", "translate-y-0", "pointer-events-auto");
+    }
+
     function showToast(msg, type = "info") {
-      const banner = document.getElementById("toastBanner");
-      const txt = document.getElementById("toastText");
+      const pop = document.getElementById("floatingToast");
+      const txt = document.getElementById("floatingToastText");
+      const iconWrap = document.getElementById("floatingToastIcon");
+      if (!pop || !txt || !iconWrap) return;
+
       txt.textContent = msg;
-      banner.className = "rounded-xl p-3.5 text-sm font-medium border flex items-center justify-between gap-3 " + (
-        type === "success" ? "bg-emerald-50 text-emerald-800 border-emerald-200" :
-        type === "error" ? "bg-red-50 text-red-700 border-red-200" :
-        "bg-indigo-50 text-indigo-800 border-indigo-200"
+
+      if (type === "error" || type === "warning") {
+        iconWrap.className = "mt-0.5 shrink-0 text-amber-400";
+        iconWrap.innerHTML = `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+      } else if (type === "success") {
+        iconWrap.className = "mt-0.5 shrink-0 text-emerald-400";
+        iconWrap.innerHTML = `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+      } else {
+        iconWrap.className = "mt-0.5 shrink-0 text-sky-400";
+        iconWrap.innerHTML = `<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`;
+      }
+
+      pop.classList.remove("opacity-0", "translate-y-4", "pointer-events-none");
+      pop.classList.add("opacity-100", "translate-y-0", "pointer-events-auto");
+
+      if (toastHideTimer) clearTimeout(toastHideTimer);
+      toastHideTimer = setTimeout(() => {
+        hideFloatingToast();
+      }, 4500);
+    }
+
+    function clearStep2Attention() {
+      if (step2HighlightTimer) {
+        clearTimeout(step2HighlightTimer);
+        step2HighlightTimer = null;
+      }
+      const dz = document.getElementById("dropZone");
+      const titleEl = document.getElementById("selectedFileTitle");
+      const iconEl = document.getElementById("dropZoneIcon");
+      if (dz) dz.classList.remove("step2-attention-box");
+      if (titleEl) titleEl.classList.remove("step2-attention-text");
+      if (iconEl) iconEl.classList.remove("step2-attention-icon");
+    }
+
+    function remindSelectFileAtStep2(dir) {
+      const sampleLabel = dir === "eq2mt"
+        ? "⚡ Thử ngay với đề mẫu Equation (.docx)"
+        : "⚡ Thử ngay với đề mẫu MathType (.docx)";
+      showToast(
+        `Vui lòng bấm vào khung chọn file Word (.docx) ở BƯỚC 2 để nạp file cần chuyển, hoặc bấm nút "${sampleLabel}" để thử ngay!`,
+        "warning"
       );
+
+      const step2El = document.getElementById("step2Container") || document.getElementById("dropZone");
+      if (step2El && typeof step2El.scrollIntoView === "function") {
+        step2El.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
+      const dz = document.getElementById("dropZone");
+      const titleEl = document.getElementById("selectedFileTitle");
+      const iconEl = document.getElementById("dropZoneIcon");
+      clearStep2Attention();
+      if (dz) {
+        void dz.offsetWidth; // trigger reflow to restart animation cleanly
+        dz.classList.add("step2-attention-box");
+      }
+      if (titleEl) titleEl.classList.add("step2-attention-text");
+      if (iconEl) iconEl.classList.add("step2-attention-icon");
+
+      step2HighlightTimer = setTimeout(() => {
+        clearStep2Attention();
+      }, 3200);
     }
 
     document.getElementById("closeToastBtn").addEventListener("click", () => {
       document.getElementById("toastBanner").classList.add("hidden");
     });
+    document.getElementById("closeFloatingToastBtn").addEventListener("click", hideFloatingToast);
 
     const tabs = [
       { btn: "tabBtnDocx", panel: "panelDocx" },
@@ -4588,6 +4727,9 @@
 
     // Drag and drop support on dropZone
     const dropZone = document.getElementById("dropZone");
+    dropZone.addEventListener("click", () => {
+      clearStep2Attention();
+    });
     dropZone.addEventListener("dragover", (e) => {
       e.preventDefault();
       dropZone.classList.add("bg-blue-100/80");
@@ -4645,14 +4787,15 @@
       return map;
     }
 
-    // CHIỀU 1 (Version 1.7): CHUYỂN MATHTYPE ➔ WORD EQUATION (<m:oMath>)
+    // CHIỀU 1 (Version 1.6): CHUYỂN MATHTYPE ➔ WORD EQUATION (<m:oMath>)
     async function processDocxInBrowser() {
       try {
         setConversionDirection("mt2eq");
         if (!currentFileBytes) {
-          showToast("Vui lòng chọn một file Word (.docx) hoặc nhấn '⚡ Thử ngay với đề mẫu MathType (.docx)'!", "error");
+          remindSelectFileAtStep2("mt2eq");
           return;
         }
+        clearStep2Attention();
 
         let sourceBytes = currentFileBytes;
         let zip = await JSZip.loadAsync(sourceBytes);
@@ -4882,9 +5025,10 @@
       try {
         setConversionDirection("eq2mt");
         if (!currentFileBytes) {
-          showToast("Vui lòng chọn một file Word (.docx) chứa công thức Equation hoặc nhấn '⚡ Thử ngay với đề mẫu Equation (.docx)'!", "error");
+          remindSelectFileAtStep2("eq2mt");
           return;
         }
+        clearStep2Attention();
 
         // Nếu người dùng vừa chạy Chiều 1 trên file gốc mà file gốc chưa có <m:oMath>, tự động dùng bản _Equation vừa tạo
         let sourceBytes = currentFileBytes;
@@ -5394,8 +5538,7 @@
         debugger;
     }, 100);
 </script>
-  
-  
+   
 </body>
 
   
