@@ -123,7 +123,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-2.5 shrink-0">
           <button type="button" id="btnLoadSampleToApp" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow transition flex items-center gap-2">
-            <span>⚡ Nạp file mẫu</span>
+            <span>⚡ Nạp Đề mẫu</span>
           </button>
           <button type="button" id="btnDownloadSampleDocx" class="px-3.5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs sm:text-sm border border-white/20 transition">
             ⬇ Tải File đề gốc mẫu (.docx)
@@ -321,7 +321,7 @@
             <!-- View 3A: Parsed Questions Inspection -->
             <div id="viewParsedQuestions" class="space-y-3 max-h-[540px] overflow-y-auto custom-scrollbar pr-1">
               <div class="text-center py-12 text-slate-400 text-sm">
-                Chưa có dữ liệu đề thi. Hãy bấm vào khung <strong>"TẢI LÊN ĐỀ GỐC(.docx)"</strong> ở bên trái để nạp file cần trộn hoặc bấm nút <strong>"⚡ Nạp file mẫu"</strong> để trộn thử.
+                Chưa có dữ liệu đề thi. Hãy bấm vào khung <strong>"TẢI LÊN ĐỀ GỐC(.docx)"</strong> ở bên trái để nạp file cần trộn hoặc bấm nút <strong>"⚡ Nạp Đề mẫu"</strong> để trộn thử.
               </div>
             </div>
 
@@ -3557,7 +3557,7 @@
 
     async function handleRunShuffle() {
       if (!currentDocxBuffer || !currentParsedExam) {
-        showToast("Vui lòng bấm vào khung TẢI LÊN ĐỀ GỐC (.docx) để nạp file cần trộn, hoặc bấm nút \"Nạp file mẫu\" để trộn thử!", true);
+        showToast("Vui lòng bấm vào khung TẢI LÊN ĐỀ GỐC (.docx) để nạp file cần trộn, hoặc bấm nút \"Nạp Đề mẫu\" để trộn thử!", true);
         const dz = document.getElementById("dropZone");
         if (dz) {
           dz.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -3809,7 +3809,7 @@
         document.body.removeChild(ta);
       });
 
-      // Không tự động nạp file mẫu khi mở trang; chờ người dùng chọn file hoặc bấm nút "Nạp file mẫu"
+      // Không tự động Nạp Đề mẫu khi mở trang; chờ người dùng chọn file hoặc bấm nút "Nạp Đề mẫu"
     });
   </script>
   
