@@ -2116,58 +2116,70 @@ def _normalize_doc_font_size_12pt(doc: DocxDocument) -> None:
 def _configure_section_headers_and_footers(doc: DocxDocument, exam_code: str) -> None:
     """
     Đồng bộ toàn bộ Header và Footer của tài liệu với mã đề `exam_code`:
-    - Xóa nội dung header cũ (nếu đề gốc có header thừa).
-    - Đặt nội dung Footer chuẩn: 'Trang <PAGE>/<NUMPAGES> - Mã đề <exam_code>'
-      cho tất cả các loại footer (footer chính, first_page_footer, even_page_footer)
-      mà vẫn giữ nguyên căn lề `<w:pPr>` của footer gốc (hoặc căn giữa nếu chưa có).
+    - Xóa mọi headerReference (tránh header cũ đè lên bảng tiêu đề đề thi).
+    - Tắt chế độ trang đầu khác biệt (titlePg) và trang chẵn/lẻ khác biệt (evenAndOddHeaders).
+    - Đảm bảo luôn có Footer chuẩn (w:type="default"): 'Trang <PAGE>/<NUMPAGES> - Mã đề <exam_code>'
+      căn giữa, cỡ chữ 12pt Times New Roman, có đường kẻ mảnh phía trên cho mọi đề gốc.
     """
+    if hasattr(doc, "settings") and doc.settings is not None and doc.settings.element is not None:
+        for eo in list(doc.settings.element.findall(qn("w:evenAndOddHeaders"))):
+            doc.settings.element.remove(eo)
+
     for section in doc.sections:
         section.different_first_page_header_footer = False
+        sectPr = section._sectPr
+        for hdr_ref in list(sectPr.findall(qn("w:headerReference"))):
+            sectPr.remove(hdr_ref)
+        for title_pg in list(sectPr.findall(qn("w:titlePg"))):
+            sectPr.remove(title_pg)
+        for ftr_ref in list(sectPr.findall(qn("w:footerReference"))):
+            if ftr_ref.get(qn("w:type")) in ("first", "even"):
+                sectPr.remove(ftr_ref)
 
-        # Làm sạch các header cũ nếu có
-        for hdr in (section.header, section.first_page_header, section.even_page_header):
-            if hdr is not None and not hdr.is_linked_to_previous:
-                for p in list(hdr.paragraphs):
-                    for r in list(p._element.findall(qn("w:r"))):
-                        p._element.remove(r)
+        ftr = section.footer
+        if ftr is None:
+            continue
+        ftr.is_linked_to_previous = False
 
-        # Cập nhật tất cả các footer để luôn hiển thị đúng: "Trang X/Y - Mã đề <exam_code>"
-        for ftr in (section.footer, section.first_page_footer, section.even_page_footer):
-            if ftr is None:
-                continue
-            ftr.is_linked_to_previous = False
+        saved_pPr: Optional[OxmlElement] = None
+        if ftr.paragraphs:
+            orig_pPr = ftr.paragraphs[0]._element.find(qn("w:pPr"))
+            if orig_pPr is not None:
+                saved_pPr = copy.deepcopy(orig_pPr)
 
-            # Lưu lại <w:pPr> của đoạn văn đầu tiên trong footer gốc (nếu có) để giữ nguyên vị trí căn lề
-            saved_pPr: Optional[OxmlElement] = None
-            if ftr.paragraphs:
-                orig_pPr = ftr.paragraphs[0]._element.find(qn("w:pPr"))
-                if orig_pPr is not None:
-                    saved_pPr = copy.deepcopy(orig_pPr)
+        for child in list(ftr._element):
+            ftr._element.remove(child)
 
-            # Xóa toàn bộ các phần tử cũ trong footer (kể cả bảng hay đoạn văn chứa mã đề cũ "1111")
-            for child in list(ftr._element):
-                ftr._element.remove(child)
+        p_ftr = ftr.add_paragraph()
+        if saved_pPr is not None:
+            old_pPr = p_ftr._element.find(qn("w:pPr"))
+            if old_pPr is not None:
+                p_ftr._element.remove(old_pPr)
+            p_ftr._element.insert(0, saved_pPr)
 
-            p_ftr = ftr.add_paragraph()
-            if saved_pPr is not None:
-                old_pPr = p_ftr._element.find(qn("w:pPr"))
-                if old_pPr is not None:
-                    p_ftr._element.remove(old_pPr)
-                p_ftr._element.insert(0, saved_pPr)
-            else:
-                p_ftr.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        pPr = p_ftr._element.get_or_add_pPr()
+        if pPr.find(qn("w:pBdr")) is None:
+            pBdr = OxmlElement("w:pBdr")
+            top_bdr = OxmlElement("w:top")
+            top_bdr.set(qn("w:val"), "single")
+            top_bdr.set(qn("w:sz"), "4")
+            top_bdr.set(qn("w:space"), "1")
+            top_bdr.set(qn("w:color"), "auto")
+            pBdr.append(top_bdr)
+            pPr.append(pBdr)
 
-            p_ftr.paragraph_format.space_before = Pt(0)
-            p_ftr.paragraph_format.space_after = Pt(0)
+        p_ftr.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_ftr.paragraph_format.space_before = Pt(0)
+        p_ftr.paragraph_format.space_after = Pt(0)
 
-            r_t1 = p_ftr.add_run("Trang ")
-            _format_run(r_t1, size_pt=12)
-            _append_word_field_to_paragraph(p_ftr, "PAGE", default_val="1", size_pt=12)
-            r_slash = p_ftr.add_run("/")
-            _format_run(r_slash, size_pt=12)
-            _append_word_field_to_paragraph(p_ftr, "NUMPAGES", default_val="4", size_pt=12)
-            r_code = p_ftr.add_run(f" - Mã đề {exam_code}")
-            _format_run(r_code, size_pt=12)
+        r_t1 = p_ftr.add_run("Trang ")
+        _format_run(r_t1, size_pt=12)
+        _append_word_field_to_paragraph(p_ftr, "PAGE", default_val="1", size_pt=12)
+        r_slash = p_ftr.add_run("/")
+        _format_run(r_slash, size_pt=12)
+        _append_word_field_to_paragraph(p_ftr, "NUMPAGES", default_val="4", size_pt=12)
+        r_code = p_ftr.add_run(f" - Mã đề {exam_code}")
+        _format_run(r_code, size_pt=12)
 
 
 def generate_single_variant_docx(
