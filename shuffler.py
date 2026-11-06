@@ -2458,8 +2458,11 @@ def generate_answer_key_excel(
     align_center = Alignment(horizontal="center", vertical="center", wrap_text=True)
     align_left = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
+    # =========================================================================
+    # Sheet 1: DapAnTongHop (Đổi tên từ Bang_Dap_An_Tong_Hop, xóa Chi_Tiet_Cham_May)
+    # =========================================================================
     ws1 = wb.active
-    ws1.title = "Bang_Dap_An_Tong_Hop"
+    ws1.title = "DapAnTongHop"
     total_cols = max(2 + len(variants), 6)
 
     ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=total_cols)
@@ -2481,7 +2484,7 @@ def generate_answer_key_excel(
         ws.row_dimensions[row_idx].height = 24
 
         row_idx += 1
-        c_q = ws.cell(row_idx, 1, "Câu \\ Mã đề")
+        c_q = ws.cell(row_idx, 1, "Câu \ Mã đề")
         c_q.font = font_header
         c_q.fill = fill_header
         c_q.border = border_all
@@ -2529,7 +2532,7 @@ def generate_answer_key_excel(
         )
         num_q2 = len(variants[0].part2_keys)
         for q_i in range(num_q2):
-            for sub_idx, sub_letter in enumerate(["a", "b", "c", "d"]):
+            for sub_letter in ["a", "b", "c", "d"]:
                 c_label = ws1.cell(row_cursor, 1, f"Câu {q_i + 1}.{sub_letter})")
                 c_label.font = font_cell
                 c_label.border = border_all
@@ -2579,51 +2582,112 @@ def generate_answer_key_excel(
     for col_i in range(2, 2 + len(variants)):
         ws1.column_dimensions[get_column_letter(col_i)].width = 15
 
-    # Sheet 2: Dạng bảng phẳng phục vụ chấm máy
-    ws2 = wb.create_sheet(title="Chi_Tiet_Cham_May")
-    headers2 = ["Mã đề", "Phần", "Câu số", "Đáp án chuẩn", "Câu gốc tham chiếu"]
-    for c_i, h_text in enumerate(headers2, start=1):
-        cell = ws2.cell(1, c_i, h_text)
-        cell.font = font_header
-        cell.fill = fill_header
-        cell.border = border_all
-        cell.alignment = align_center
-    ws2.row_dimensions[1].height = 22
+    # =========================================================================
+    # Sheet 2: DapAnQM (Theo đúng mẫu 1.xlsx: Giữ nguyên 79 cột cố định)
+    # =========================================================================
+    ws_qm = wb.create_sheet(title="DapAnQM")
+    qm_headers = ["Đề \ Câu"]
+    qm_headers.extend(range(1, 41))  # Cột 2..41: Câu 1..40 Phần I
+    for i in range(1, 9):            # Cột 42..73: Câu 1a..8d Phần II
+        for sub in ["a", "b", "c", "d"]:
+            qm_headers.append(f"{i}{sub}")
+    qm_headers.extend(range(1, 7))   # Cột 74..79: Câu 1..6 Phần III
 
-    r2_idx = 2
-    for v in variants:
-        for idx, ans in enumerate(v.part1_keys, start=1):
-            orig_q = v.question_mapping["part1"][idx - 1]
-            row_vals = [v.exam_code, "Phần I", f"Câu {idx}", ans, f"Câu {orig_q} (Phần I gốc)"]
-            for c_i, val in enumerate(row_vals, start=1):
-                c = ws2.cell(r2_idx, c_i, val)
-                c.font = font_cell
-                c.border = border_all
-                c.alignment = align_center
-            r2_idx += 1
+    for col_idx, h_val in enumerate(qm_headers, start=1):
+        ws_qm.cell(1, col_idx, h_val)
 
-        for idx, ans in enumerate(v.part2_keys, start=1):
-            orig_q = v.question_mapping["part2"][idx - 1]
-            row_vals = [v.exam_code, "Phần II", f"Câu {idx} (a-b-c-d)", ans, f"Câu {orig_q} (Phần II gốc)"]
-            for c_i, val in enumerate(row_vals, start=1):
-                c = ws2.cell(r2_idx, c_i, val)
-                c.font = font_cell
-                c.border = border_all
-                c.alignment = align_center
-            r2_idx += 1
+    for r_offset, v in enumerate(variants, start=2):
+        code_str = str(v.exam_code).strip()
+        code_val = int(code_str) if code_str.isdigit() else code_str
+        ws_qm.cell(r_offset, 1, code_val)
 
-        for idx, ans in enumerate(v.part3_keys, start=1):
-            orig_q = v.question_mapping["part3"][idx - 1]
-            row_vals = [v.exam_code, "Phần III", f"Câu {idx}", ans, f"Câu {orig_q} (Phần III gốc)"]
-            for c_i, val in enumerate(row_vals, start=1):
-                c = ws2.cell(r2_idx, c_i, val)
-                c.font = font_cell
-                c.border = border_all
-                c.alignment = align_center
-            r2_idx += 1
+        # Phần I: Cột 2..41 (40 câu)
+        for q_i in range(40):
+            if q_i < len(v.part1_keys) and v.part1_keys[q_i]:
+                ws_qm.cell(r_offset, 2 + q_i, str(v.part1_keys[q_i]).strip().upper())
 
-    for c_i, w in enumerate([12, 14, 18, 18, 24], start=1):
-        ws2.column_dimensions[get_column_letter(c_i)].width = w
+        # Phần II: Cột 42..73 (8 câu x 4 ý = 32 cột; Đúng -> "D", Sai -> "S")
+        for q_i in range(8):
+            detail_map = v.part2_detail[q_i] if q_i < len(v.part2_detail) else {}
+            for s_idx, sub in enumerate(["a", "b", "c", "d"]):
+                raw_sub = str(detail_map.get(sub, "")).strip().upper()
+                col_pos = 42 + q_i * 4 + s_idx
+                if raw_sub in ("Đ", "D"):
+                    ws_qm.cell(r_offset, col_pos, "D")
+                elif raw_sub == "S":
+                    ws_qm.cell(r_offset, col_pos, "S")
+
+        # Phần III: Cột 74..79 (6 câu; lưu dạng số dùng dấu chấm thập phân)
+        for q_i in range(6):
+            if q_i < len(v.part3_keys) and v.part3_keys[q_i] is not None:
+                raw_ans = str(v.part3_keys[q_i]).strip()
+                if raw_ans:
+                    norm_ans = raw_ans.replace(",", ".")
+                    col_pos = 74 + q_i
+                    if re.match(r"^-?\d+$", norm_ans):
+                        ws_qm.cell(r_offset, col_pos, int(norm_ans))
+                    elif re.match(r"^-?\d+\.\d+$", norm_ans):
+                        ws_qm.cell(r_offset, col_pos, float(norm_ans))
+                    else:
+                        ws_qm.cell(r_offset, col_pos, raw_ans)
+
+    # =========================================================================
+    # Sheet 3: DapAnTNMaker (Theo đúng mẫu 2.xlsx - sheet DAPAN)
+    # =========================================================================
+    ws_tnm = wb.create_sheet(title="DapAnTNMaker")
+    ws_tnm.cell(1, 1, "Câu\Mã đề")
+    for v_idx, v in enumerate(variants, start=2):
+        code_str = str(v.exam_code).strip()
+        code_val = int(code_str) if code_str.isdigit() else code_str
+        ws_tnm.cell(1, v_idx, code_val)
+
+    tnm_row = 2
+    num_p1 = len(variants[0].part1_keys) if variants else 0
+    num_p2 = len(variants[0].part2_keys) if variants else 0
+    num_p3 = len(variants[0].part3_keys) if variants else 0
+
+    # Phần I (1..num_p1)
+    for q_i in range(num_p1):
+        ws_tnm.cell(tnm_row, 1, q_i + 1)
+        for v_idx, v in enumerate(variants, start=2):
+            if q_i < len(v.part1_keys) and v.part1_keys[q_i]:
+                ws_tnm.cell(tnm_row, v_idx, str(v.part1_keys[q_i]).strip().upper())
+        tnm_row += 1
+
+    # Phần II (1..num_p2, gộp 4 ý thành chuỗi 4 ký tự Đ/S liền nhau như "SSĐĐ")
+    for q_i in range(num_p2):
+        ws_tnm.cell(tnm_row, 1, q_i + 1)
+        for v_idx, v in enumerate(variants, start=2):
+            detail_map = v.part2_detail[q_i] if q_i < len(v.part2_detail) else {}
+            if detail_map:
+                joined = "".join(
+                    "Đ" if str(detail_map.get(sub, "")).strip().upper() in ("Đ", "D")
+                    else ("S" if str(detail_map.get(sub, "")).strip().upper() == "S" else "")
+                    for sub in ["a", "b", "c", "d"]
+                )
+            elif q_i < len(v.part2_keys) and v.part2_keys[q_i]:
+                joined = str(v.part2_keys[q_i]).replace("-", "").strip().upper().replace("D", "Đ")
+            else:
+                joined = ""
+            if joined:
+                ws_tnm.cell(tnm_row, v_idx, joined)
+        tnm_row += 1
+
+    # Phần III (1..num_p3, số nguyên lưu int, số thập phân lưu chuỗi có dấu phẩy như "-12,5")
+    for q_i in range(num_p3):
+        ws_tnm.cell(tnm_row, 1, q_i + 1)
+        for v_idx, v in enumerate(variants, start=2):
+            if q_i < len(v.part3_keys) and v.part3_keys[q_i] is not None:
+                raw_ans = str(v.part3_keys[q_i]).strip()
+                if raw_ans:
+                    norm_ans = raw_ans.replace(",", ".")
+                    if re.match(r"^-?\d+$", norm_ans):
+                        ws_tnm.cell(tnm_row, v_idx, int(norm_ans))
+                    elif re.match(r"^-?\d+\.\d+$", norm_ans):
+                        ws_tnm.cell(tnm_row, v_idx, norm_ans.replace(".", ","))
+                    else:
+                        ws_tnm.cell(tnm_row, v_idx, raw_ans)
+        tnm_row += 1
 
     out_excel = io.BytesIO()
     wb.save(out_excel)
