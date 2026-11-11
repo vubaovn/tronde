@@ -30,6 +30,7 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Mm, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
+from PIL import Image, ImageDraw
 import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
@@ -2706,6 +2707,143 @@ def generate_answer_key_excel(
     return out_excel.getvalue()
 
 
+QR_MATRIX_N = 55
+QR_P3_CHARS = ["", "-", ",", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+
+def _is_qr_corner_zone(r: int, c: int, size: int = QR_MATRIX_N) -> bool:
+    return (
+        (r < 8 and c < 8)
+        or (r < 8 and c >= size - 8)
+        or (r >= size - 8 and c >= size - 8)
+        or (r >= size - 8 and c < 8)
+    )
+
+
+def _crc16ccitt(data: bytes) -> int:
+    crc = 0xFFFF
+    for b in data:
+        crc ^= (b << 8)
+        for _ in range(8):
+            crc = ((crc << 1) ^ 0x1021) & 0xFFFF if (crc & 0x8000) else (crc << 1) & 0xFFFF
+    return crc
+
+
+def generate_answer_key_qr_jpg_files(
+    variants: List[ShuffledVariantResult],
+    meta: ExamMetadata,
+) -> List[Tuple[str, bytes]]:
+    if not variants:
+        return []
+
+    p1_count = len(variants[0].part1_keys)
+    p2_count = len(variants[0].part2_keys)
+    p3_count = len(variants[0].part3_keys)
+
+    sorted_all = sorted(variants, key=lambda v: str(v.exam_code).strip())
+    batches = [sorted_all[i : i + 11] for i in range(0, len(sorted_all), 11)]
+    opts = ["A", "B", "C", "D"]
+    results: List[Tuple[str, bytes]] = []
+
+    for batch_idx, batch in enumerate(batches):
+        out = bytearray()
+        out.extend([
+            0x56, 0x42, 0x32, 0x35, 1,
+            min(40, max(0, p1_count)),
+            min(8, max(0, p2_count)),
+            min(6, max(0, p3_count)),
+            len(batch),
+        ])
+
+        for v in batch:
+            clean_code = str(v.exam_code).strip()
+            num_val = int(clean_code) if clean_code.isdigit() else 0
+            out.append(len(clean_code) or 4)
+            out.append((num_val >> 8) & 0xFF)
+            out.append(num_val & 0xFF)
+
+            # 40 câu Phần I -> 10 bytes
+            for b in range(10):
+                byte_val = 0
+                for j in range(4):
+                    q_idx = b * 4 + j
+                    raw_ans = str(v.part1_keys[q_idx]).strip().upper() if q_idx < len(v.part1_keys) and v.part1_keys[q_idx] else "A"
+                    val = opts.index(raw_ans) if raw_ans in opts else 0
+                    byte_val |= (val & 0x03) << (6 - j * 2)
+                out.append(byte_val)
+
+            # 32 ý Phần II -> 4 bytes (Đúng -> 1, Sai -> 0)
+            for q in range(0, 8, 2):
+                byte_val = 0
+                for half in range(2):
+                    nib = 0
+                    q_curr = q + half
+                    detail_map = v.part2_detail[q_curr] if q_curr < len(v.part2_detail) else {}
+                    for s_idx, sub in enumerate(["a", "b", "c", "d"]):
+                        raw_sub = str(detail_map.get(sub, "D")).strip().upper() if detail_map else "D"
+                        if raw_sub in ("D", "Đ"):
+                            nib |= (1 << (3 - s_idx))
+                    if half == 0:
+                        byte_val = (nib << 4)
+                    else:
+                        byte_val |= nib
+                out.append(byte_val)
+
+            # 6 câu Phần III -> 12 bytes
+            for q in range(6):
+                raw_str = str(v.part3_keys[q]).strip().replace(".", ",") if q < len(v.part3_keys) and v.part3_keys[q] is not None else ""
+                for pair in range(2):
+                    c0 = raw_str[pair * 2] if pair * 2 < len(raw_str) else ""
+                    c1 = raw_str[pair * 2 + 1] if pair * 2 + 1 < len(raw_str) else ""
+                    idx0 = QR_P3_CHARS.index(c0) if c0 in QR_P3_CHARS else 0
+                    idx1 = QR_P3_CHARS.index(c1) if c1 in QR_P3_CHARS else 0
+                    out.append(((idx0 & 0x0F) << 4) | (idx1 & 0x0F))
+
+        crc = _crc16ccitt(bytes(out))
+        out.append((crc >> 8) & 0xFF)
+        out.append(crc & 0xFF)
+
+        bits = []
+        for b in out:
+            for bit in range(7, -1, -1):
+                bits.append((b >> bit) & 1)
+
+        N = QR_MATRIX_N
+        mod_px = 9
+        grid_px = N * mod_px
+        card_w, card_h = 600, 680
+        pad_x = (card_w - grid_px) // 2
+        pad_y = 92
+
+        img = Image.new("RGB", (card_w, card_h), (255, 255, 255))
+        draw = ImageDraw.Draw(img)
+
+        for r0, c0 in [(0, 0), (0, N - 6), (N - 6, N - 6), (N - 6, 0)]:
+            x0 = pad_x + c0 * mod_px
+            y0 = pad_y + r0 * mod_px
+            draw.rectangle([x0, y0, x0 + 6 * mod_px - 1, y0 + 6 * mod_px - 1], fill=(0, 0, 0))
+
+        bit_idx = 0
+        for r in range(N):
+            for c in range(N):
+                if _is_qr_corner_zone(r, c, N):
+                    continue
+                b = bits[bit_idx % len(bits)]
+                mask = (r * 3 + c * 5 + 1) & 1
+                if (b ^ mask) == 1:
+                    x0 = pad_x + c * mod_px
+                    y0 = pad_y + r * mod_px
+                    draw.rectangle([x0, y0, x0 + mod_px - 1, y0 + mod_px - 1], fill=(0, 0, 0))
+                bit_idx += 1
+
+        jpg_buf = io.BytesIO()
+        img.save(jpg_buf, format="JPEG", quality=98, subsampling=0)
+        fname = "Ma QR Dap an.JPG" if batch_idx == 0 else f"Ma QR Dap an ({batch_idx + 1}).JPG"
+        results.append((fname, jpg_buf.getvalue()))
+
+    return results
+
+
 def create_shuffled_exam_package_zip(
     source_docx_bytes: bytes,
     exam_codes: List[str],
@@ -2733,6 +2871,7 @@ def create_shuffled_exam_package_zip(
         variants.append(variant)
 
     excel_bytes = generate_answer_key_excel(variants, meta)
+    qr_jpg_files = generate_answer_key_qr_jpg_files(variants, meta)
 
     zip_buf = io.BytesIO()
     with zipfile.ZipFile(zip_buf, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
@@ -2740,6 +2879,8 @@ def create_shuffled_exam_package_zip(
         for v in variants:
             zf.writestr(f"Ma_De_{v.exam_code}.docx", v.docx_bytes)
         zf.writestr("Bang_Dap_An_Cham_Thi.xlsx", excel_bytes)
+        for qr_name, qr_bytes in qr_jpg_files:
+            zf.writestr(qr_name, qr_bytes)
 
     return zip_buf.getvalue(), parsed, variants
 
