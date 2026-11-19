@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TRONDE 2025 - Trộn đề Trắc nghiệm (Chuẩn 3 phần của Bộ Giáo dục năm 2025)</title>
   <link href="https://www.vubao.io.vn/favicon.ico" rel="icon" type="image/x-icon"/>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -57,33 +58,34 @@
       margin: 0 auto;
       padding: 0 16px;
     }
-    /* Topbar đồng bộ chamthi.io.vn */
+    /* Topbar siêu gọn 1 hàng đồng bộ chamthi.io.vn (Trái: TRONDE... | Phải: Đồng bộ & Zalo...) */
     .ct-topbar {
       background: var(--ct-topbar);
       color: #e2e8f0;
-      font-size: 12.5px;
+      font-size: 12px;
+      height: 36px;
+      display: flex;
+      align-items: center;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
     .ct-topbar-inner {
-      min-height: 36px;
-      padding-top: 4px;
-      padding-bottom: 4px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      flex-wrap: wrap;
+      white-space: nowrap;
+      overflow: hidden;
     }
     .ct-topbar-left {
       display: flex;
       align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: 10px;
+      overflow: hidden;
     }
     .ct-status-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       background: var(--ct-green);
       color: #ffffff;
       border: 1px solid rgba(255, 255, 255, 0.32);
@@ -92,16 +94,18 @@
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.2px;
+      flex-shrink: 0;
     }
     .ct-topbar-right {
       display: flex;
       align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
+      gap: 12px;
+      flex-shrink: 0;
     }
     .ct-topbar-right a {
       color: #fde68a;
       font-weight: 700;
+      font-size: 12px;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
@@ -111,28 +115,27 @@
     .ct-topbar-right a:hover {
       color: #ffffff;
     }
-    /* Header tím đồng bộ chamthi.io.vn */
+    /* Header tím đồng bộ chamthi.io.vn: Logo canh trái, Menu 1 hàng bên phải, thu nhỏ/phóng to hiện nút 3 gạch */
     .ct-header {
       background: linear-gradient(90deg, #5000ff 0%, #4300d6 55%, #3b00b8 100%);
       position: sticky;
       top: 0;
       z-index: 999;
       box-shadow: 0 4px 16px rgba(80, 0, 255, 0.28);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
     }
     .ct-header-inner {
-      min-height: 62px;
-      padding-top: 8px;
-      padding-bottom: 8px;
+      height: 62px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
+      gap: 12px;
+      flex-wrap: nowrap;
     }
     .ct-brand {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 11px;
+      gap: 10px;
       text-decoration: none;
       flex-shrink: 0;
     }
@@ -145,57 +148,47 @@
       object-fit: cover;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
     }
-    .ct-brand-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: 0.3px;
-      line-height: 1.12;
-    }
-    .ct-brand-sub {
-      font-size: 11px;
-      font-weight: 700;
-      color: #fde68a;
-      letter-spacing: 0.35px;
-      margin-top: 2px;
-    }
     .ct-nav {
       display: flex;
-      align-items: center;
+      align-items: stretch;
       gap: 6px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
     .ct-nav-btn {
+      flex: 1 1 auto;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 8px 13px;
+      min-height: 38px;
+      padding: 7px 13px;
+      line-height: 1.2;
       border-radius: 9px;
       font-size: 12.5px;
       font-weight: 700;
       color: #ffffff;
-      background: transparent;
-      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid rgba(255, 255, 255, 0.28);
       cursor: pointer;
       text-decoration: none;
       transition: all 0.16s ease;
       white-space: nowrap;
     }
     .ct-nav-btn:hover {
-      background: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.45);
       color: #fde68a;
     }
     .ct-nav-btn.is-active {
       background: rgba(255, 255, 255, 0.22);
-      border-color: rgba(255, 255, 255, 0.42);
+      border-color: rgba(255, 255, 255, 0.45);
       color: #fde68a;
       box-shadow: 0 2px 8px rgba(19, 17, 48, 0.2);
     }
     .ct-nav-amber {
       background: var(--ct-amber-bg);
       color: var(--ct-text-main) !important;
-      border: 1px solid var(--ct-amber-border);
+      border: 1.5px solid var(--ct-amber-border);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
     }
     .ct-nav-amber:hover {
@@ -211,6 +204,59 @@
     .ct-nav-green:hover {
       background: var(--ct-green-hover);
       color: #ffffff !important;
+    }
+    /* Nút 3 gạch (Hamburger) mở Menu khi phóng to hoặc màn hình nhỏ — đồng bộ chamthi.io.vn */
+    .ct-mobile-toggle {
+      display: none;
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      width: 38px;
+      height: 38px;
+      border-radius: 9px;
+      font-size: 17px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background-color 0.15s ease;
+    }
+    .ct-mobile-toggle:hover {
+      background: rgba(255, 255, 255, 0.26);
+    }
+    /* Khay Menu xổ xuống khi bấm nút 3 gạch: tự chia lưới 2 cột (2x2, 2x3...), nút lẻ cuối tự giãn 100% */
+    .ct-mobile-drawer {
+      display: none;
+      background: #3b00b8;
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 12px 16px 14px;
+    }
+    .ct-mobile-drawer.open {
+      display: block;
+    }
+    @media (min-width: 1121px) {
+      .ct-mobile-drawer,
+      .ct-mobile-drawer.open {
+        display: none !important;
+      }
+    }
+    .ct-drawer-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      max-width: var(--ct-max-w);
+      margin: 0 auto;
+    }
+    .ct-drawer-grid > .ct-nav-btn {
+      width: 100%;
+      padding: 10px 10px;
+      font-size: 12.5px;
+      border-radius: 10px;
+      white-space: normal;
+    }
+    /* Tự động cho nút cuối cùng giãn 100% chiều ngang nếu tổng số nút là số lẻ (5, 7, 9 nút...) */
+    .ct-drawer-grid > *:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
     }
     /* Hero Shell đồng bộ chamthi.io.vn */
     .ct-hero-shell {
@@ -341,36 +387,67 @@
       background: var(--ct-topbar);
       border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
-    /* Responsive mobile topbar & nav gọn gàng, không rớt dòng lộn xộn */
-    @media (max-width: 768px) {
-      .ct-topbar-inner {
-        justify-content: center;
-        text-align: center;
-        font-size: 11.5px;
-        gap: 6px 12px;
-        padding-top: 6px;
-        padding-bottom: 6px;
+    /* Đồng bộ breakpoint 1120px như chamthi.io.vn: khi phóng to hoặc màn hình hẹp -> ẩn menu ngang, hiện nút 3 gạch bên phải */
+    @media (max-width: 1120px) {
+      .ct-nav {
+        display: none;
       }
-      .ct-topbar-left, .ct-topbar-right {
-        justify-content: center;
-        gap: 8px 12px;
+      .ct-mobile-toggle {
+        display: inline-flex;
+      }
+    }
+    @media (max-width: 680px) {
+      .ct-container {
+        padding: 0 12px;
+      }
+      .ct-topbar {
+        height: 32px;
+        font-size: 11px;
+      }
+      .ct-topbar-hide-sm {
+        display: none !important;
       }
       .ct-header-inner {
-        justify-content: center;
-        gap: 10px;
+        height: 54px;
       }
-      .ct-nav {
-        width: 100%;
+      .ct-brand-logo {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+      }
+    }
+    /* Hệ thống cụm nút tự co giãn đồng bộ chamthi.io.vn:
+       - Đủ chiều ngang: 1 dòng, tự chia đều chiều rộng (flex: 1 1 auto)
+       - Không đủ chiều ngang (<= 640px): lưới 2 cột (2x2), nút lẻ cuối tự giãn 100% */
+    .ct-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .ct-btn-group > button,
+    .ct-btn-group > a {
+      flex: 1 1 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: nowrap;
+    }
+    @media (max-width: 640px) {
+      .ct-btn-group {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
+        gap: 8px;
+        width: 100%;
       }
-      .ct-nav-btn {
-        font-size: 11.5px;
-        padding: 7px 8px;
-        justify-content: center;
-        text-align: center;
-        white-space: nowrap;
+      .ct-btn-group > button,
+      .ct-btn-group > a {
+        width: 100%;
+        white-space: normal;
+      }
+      .ct-btn-group > *:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
       }
     }
     /* Tối ưu tự động khi xoay ngang màn hình điện thoại (Mobile Landscape) */
@@ -386,15 +463,15 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- Top Utility Bar (Tinh gọn & đồng bộ chamthi.io.vn) -->
+  <!-- Top Utility Bar (Tinh gọn 1 hàng & đồng bộ chamthi.io.vn: Trái TRONDE, Phải Zalo) -->
   <div class="ct-topbar">
     <div class="ct-container ct-topbar-inner">
       <div class="ct-topbar-left">
         <span class="ct-status-pill"><i class="fas fa-check-circle"></i> TRONDE 2025 v1.5</span>
-        <span class="hidden md:inline">Chuẩn <strong style="color:#fde68a;">Công văn 1239 BGD&amp;ĐT</strong></span>
+        <span class="ct-topbar-hide-sm">Chuẩn <strong style="color:#fde68a;">Công văn 1239 BGD&amp;ĐT</strong></span>
       </div>
       <div class="ct-topbar-right">
-        <a href="https://www.chamthi.io.vn/" target="_blank" rel="noopener"><i class="fas fa-mobile-alt"></i> Đồng bộ Chấm TN VB 2025</a>
+        <a class="ct-topbar-hide-sm" href="https://www.chamthi.io.vn/" target="_blank" rel="noopener"><i class="fas fa-mobile-alt"></i> Đồng bộ Chấm TN VB 2025</a>
         <a href="https://zalo.me/0989059009" target="_blank" rel="noopener"><i class="fas fa-phone-alt"></i> Zalo: 0989.059.009</a>
       </div>
     </div>
@@ -426,6 +503,32 @@
           <i class="fab fa-google-play"></i> TẢI APP CHẤM TN VB
         </a>
       </nav>
+
+      <!-- Nút 3 gạch hiện bên phải khi phóng to / màn hình nhỏ -->
+      <button type="button" id="ctMobileToggleBtn" aria-label="Mở menu" class="ct-mobile-toggle" onclick="document.getElementById('ct-mobile-drawer').classList.toggle('open')">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+
+    <!-- Menu xổ xuống tự động chia 2 cột, nút lẻ cuối tự giãn 100% (hỗ trợ 5, 6, 7... nút) -->
+    <div id="ct-mobile-drawer" class="ct-mobile-drawer">
+      <div class="ct-drawer-grid">
+        <button type="button" data-tab="workspace" class="tab-nav-btn ct-nav-btn is-active">
+          <i class="fas fa-random"></i> TRỘN ĐỀ NGAY
+        </button>
+        <button type="button" data-tab="format" class="tab-nav-btn ct-nav-btn">
+          <i class="fas fa-file-word"></i> QUY ƯỚC ĐỀ GỐC (.docx)
+        </button>
+        <a href="tools.html" class="ct-nav-btn ct-nav-amber">
+          <i class="fas fa-tools"></i> TIỆN ÍCH
+        </a>
+        <a href="https://www.chamthi.io.vn/" target="_blank" rel="noopener" class="ct-nav-btn ct-nav-green">
+          <i class="fas fa-play"></i> CHẤM TN VB
+        </a>
+        <a href="https://play.google.com/store/apps/details?id=vn.edu.chamtnvb2025" target="_blank" rel="noopener" class="ct-nav-btn ct-nav-green">
+          <i class="fab fa-google-play"></i> TẢI APP CHẤM TN VB
+        </a>
+      </div>
     </div>
   </header>
 
@@ -452,23 +555,23 @@
               <i class="fas fa-check-double"></i> CHUẨN CÔNG VĂN 1239 BGD&amp;ĐT
             </span>
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide bg-[#fff8d6] text-[#92400e] border border-[#fbbf24]">
-              <i class="fas fa-qrcode"></i> QR ISO/IEC 18004 • CHẤM TN VB • QM 2025
+              <i class="fas fa-qrcode"></i> CHUẨN QR ISO/IEC • CHẤM TN VB • QM 2025
             </span>
           </div>
           <h1 class="text-xl sm:text-2xl font-extrabold text-[#1c1917] leading-tight">
-            Trộn đề Word (.docx) 3 phần &amp; Xuất gói <span class="text-[#5000ff]">.ZIP + Excel + Mã QR chuẩn</span>
+            File word (.docx) 4 phần &amp; Xuất gói .ZIP (Word, Excel, QR).
           </h1>
           <p class="text-xs sm:text-sm text-[#44403c] leading-relaxed">
-            <i class="fas fa-check text-[#145a32] mr-1"></i> Tự động chuyển Numbering → Text, <strong>chia cột đáp án A. B. C. D.</strong> (1 / 2 / 4 dòng), tô màu xanh dương nhãn phương án, bảo toàn 100% MathType/Equation &amp; Hình ảnh.<br />
-            <i class="fas fa-check text-[#145a32] mr-1"></i> Xuất bảng đáp án Excel 3 sheet &amp; <strong>Mã QR chuẩn ISO/IEC 18004</strong> quét trực tiếp trên <strong>Chấm TN VB 2025</strong>, <strong>QM 2025</strong> và <strong>TNMaker</strong>.
+            <i class="fas fa-check text-[#145a32] mr-1"></i> Tự động chuyển Numbering → Text, <strong>chia cột đáp án A. B. C. D.</strong> (1 / 2 / 4 dòng), tô màu xanh dương nhãn phương án.<br />
+            <i class="fas fa-check text-[#145a32] mr-1"></i> Xuất bảng đáp án Excel theo các mẫu thông dụng &amp; <strong>QR chuẩn ISO/IEC</strong> quét trực tiếp trên <strong>Chấm TN VB 2025</strong>, <strong>QM 2025</strong>.
           </p>
         </div>
-        <div class="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-stretch gap-2.5 shrink-0 w-full sm:w-auto lg:min-w-[260px]">
-          <button type="button" id="btnLoadSampleToApp" class="ct-btn-amber justify-center px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center gap-2">
+        <div class="ct-btn-group lg:flex-col shrink-0 w-full lg:w-auto lg:min-w-[260px]">
+          <button type="button" id="btnLoadSampleToApp" class="ct-btn-amber px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm gap-2">
             <i class="fas fa-bolt text-[#92400e]"></i>
             <span>Nạp Đề mẫu để Trộn thử</span>
           </button>
-          <button type="button" id="btnDownloadSampleDocx" class="ct-btn-white justify-center px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2">
+          <button type="button" id="btnDownloadSampleDocx" class="ct-btn-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm gap-2">
             <i class="fas fa-download text-[#5000ff]"></i>
             <span>Tải file mẫu đề gốc (.docx)</span>
           </button>
@@ -650,11 +753,11 @@
             </div>
 
             <!-- Sub-tabs inside Right Panel: [Nhận diện đề gốc] vs [Bảng đáp án sau trộn] -->
-            <div class="grid grid-cols-1 sm:flex items-center gap-2 border-b border-[#e5dcd0] pb-3">
-              <button type="button" id="subTabBtnParsed" class="px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-[#5000ff] text-white shadow-sm transition">
+            <div class="ct-btn-group border-b border-[#e5dcd0] pb-3">
+              <button type="button" id="subTabBtnParsed" class="px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-[#5000ff] text-white border border-[#5000ff] shadow-sm transition">
                 <i class="fas fa-list-alt mr-1"></i> DANH SÁCH CÂU HỎI &amp; ĐÁP ÁN GỐC
               </button>
-              <button type="button" id="subTabBtnMatrix" class="px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-white text-[#57534e] border border-[#e5dcd0] hover:border-[#5000ff] hover:text-[#5000ff] transition">
+              <button type="button" id="subTabBtnMatrix" class="px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-white text-[#57534e] border border-[#d6c8b6] hover:border-[#5000ff] hover:text-[#5000ff] transition">
                 <i class="fas fa-qrcode mr-1"></i> MÃ QR &amp; BẢNG ĐÁP ÁN ĐÃ TRỘN (.xlsx)
               </button>
             </div>
@@ -749,8 +852,8 @@
       <div class="flex items-center gap-3">
         <img src="data:image/png;base64,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" alt="TRONDE 2025" class="w-9 h-9 rounded-lg border border-white/40 bg-white" />
         <div>
-          <div class="font-extrabold text-white">TRONDE 2025 v1.5 — Hệ sinh thái Chấm TN VB 2025</div>
-          <div class="text-xs text-slate-300">Trộn đề Word (.docx) 3 phần chuẩn BGD&amp;ĐT • Xuất Excel &amp; Mã QR chuẩn ISO/IEC 18004</div>
+          <div class="font-extrabold text-white">TRONDE 2025 v1.5 — Đồng bộ với ứng dụng Chấm TN VB 2025</div>
+          <div class="text-xs text-slate-300">Trộn đề Word (.docx) 4 phần chuẩn BGD&amp;ĐT • Xuất Excel &amp; Mã QR chuẩn ISO/IEC</div>
         </div>
       </div>
       <div class="flex flex-wrap items-center justify-center gap-3 text-xs font-bold">
@@ -4893,6 +4996,8 @@
         const isActive = btn.getAttribute("data-tab") === tabName;
         btn.className = isActive ? "tab-nav-btn ct-nav-btn is-active" : "tab-nav-btn ct-nav-btn";
       });
+      const drawer = document.getElementById("ct-mobile-drawer");
+      if (drawer) drawer.classList.remove("open");
     }
 
     function switchSubTab(mode) {
@@ -4901,11 +5006,11 @@
       document.getElementById("viewShuffledMatrix").classList.toggle("hidden", isParsed);
 
       document.getElementById("subTabBtnParsed").className = isParsed
-        ? "px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-[#5000ff] text-white shadow-sm transition"
-        : "px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-white text-[#57534e] border border-[#e5dcd0] hover:border-[#5000ff] hover:text-[#5000ff] transition";
+        ? "px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-[#5000ff] text-white border border-[#5000ff] shadow-sm transition"
+        : "px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-white text-[#57534e] border border-[#d6c8b6] hover:border-[#5000ff] hover:text-[#5000ff] transition";
       document.getElementById("subTabBtnMatrix").className = !isParsed
-        ? "px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-[#5000ff] text-white shadow-sm transition"
-        : "px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-white text-[#57534e] border border-[#e5dcd0] hover:border-[#5000ff] hover:text-[#5000ff] transition";
+        ? "px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-[#5000ff] text-white border border-[#5000ff] shadow-sm transition"
+        : "px-3.5 py-2 rounded-xl text-xs font-extrabold text-center bg-white text-[#57534e] border border-[#d6c8b6] hover:border-[#5000ff] hover:text-[#5000ff] transition";
     }
 
     async function handleRunShuffle() {
@@ -4995,6 +5100,16 @@
 
     // Init Listeners on DOM Ready
     window.addEventListener("DOMContentLoaded", () => {
+      // Tự động xóa trạng thái mở của menu xổ xuống khi thu về màn hình rộng (> 1120px, VD: Ctrl+0)
+      const desktopMq = window.matchMedia("(min-width: 1121px)");
+      const closeDrawerOnDesktop = (e) => {
+        if (e.matches) {
+          const dr = document.getElementById("ct-mobile-drawer");
+          if (dr) dr.classList.remove("open");
+        }
+      };
+      if (desktopMq.addEventListener) desktopMq.addEventListener("change", closeDrawerOnDesktop);
+      else if (desktopMq.addListener) desktopMq.addListener(closeDrawerOnDesktop);
       document.querySelectorAll(".tab-nav-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           switchMainTab(btn.getAttribute("data-tab"));
