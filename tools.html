@@ -422,7 +422,7 @@
         <button type="button" id="tabBtnMathML" data-tab="mathml" class="meq-tab-btn ct-nav-btn">
           <i class="fas fa-code"></i> KHÔI PHỤC &lt;math&gt;
         </button>
-        <a href="https://tronde.chamthi.io.vn/" id="tabBtnTrondeApp" class="ct-nav-btn ct-nav-amber">
+        <a href="https://tronde.chamthi.io.vn/" target="_blank" rel="noopener noreferrer" id="tabBtnTrondeApp" class="ct-nav-btn ct-nav-amber">
           <i class="fas fa-random"></i> TRỘN ĐỀ TRONDE
         </a>
         <a href="https://www.chamthi.io.vn/" target="_blank" rel="noopener" class="ct-nav-btn ct-nav-green">
@@ -451,7 +451,7 @@
         <button type="button" data-tab="mathml" class="meq-tab-btn ct-nav-btn">
           <i class="fas fa-code"></i> KHÔI PHỤC &lt;math&gt;
         </button>
-        <a href="https://tronde.chamthi.io.vn/" class="ct-nav-btn ct-nav-amber">
+        <a href="https://tronde.chamthi.io.vn/" target="_blank" rel="noopener noreferrer" class="ct-nav-btn ct-nav-amber">
           <i class="fas fa-random"></i> TRỘN ĐỀ TRONDE
         </a>
         <a href="https://www.chamthi.io.vn/" target="_blank" rel="noopener" class="ct-nav-btn ct-nav-green">
@@ -781,21 +781,53 @@
             <!-- Break Type + Output Filename -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 ct-inner-card p-3.5 text-xs">
               <div class="space-y-1.5">
-                <label class="font-extrabold text-[#1c1917] block">Kiểu ngắt trang giữa 2 đề:</label>
+                <label class="font-extrabold text-[#1c1917] block">Chế độ ngắt trang giữa các đề:</label>
                 <div class="grid grid-cols-2 gap-2">
-                  <label class="flex items-center gap-2 p-2 rounded-lg border border-[#d6c8b6] bg-[#f9f6f0] cursor-pointer has-[:checked]:border-[#5000ff] has-[:checked]:bg-[#ede9fe]">
-                    <input type="radio" name="mergeBreakType" value="nextPage" checked class="accent-[#5000ff]">
-                    <span class="font-bold text-[#1c1917]">Trang mới</span>
+                  <label class="flex items-center gap-2 p-2 rounded-lg border border-[#d6c8b6] bg-[#f9f6f0] cursor-pointer has-[:checked]:border-[#0d8a81] has-[:checked]:bg-[#ccfbf1]" title="Đề 3 trang tự thêm 1 mặt trắng thành 4, đề 5 trang thành 6 để in 2 mặt liên tục không dính 2 mã đề chung 1 tờ">
+                    <input type="radio" name="mergeBreakType" value="oddPage" checked class="accent-[#0d8a81]">
+                    <span class="font-bold text-[#1c1917]">Chẵn trang (In 2 mặt)</span>
                   </label>
-                  <label class="flex items-center gap-2 p-2 rounded-lg border border-[#d6c8b6] bg-[#f9f6f0] cursor-pointer has-[:checked]:border-[#0d8a81] has-[:checked]:bg-[#ccfbf1]" title="Khuyên dùng khi in 2 mặt nếu đề có số trang lẻ (3 trang, 5 trang...)">
-                    <input type="radio" name="mergeBreakType" value="oddPage" class="accent-[#0d8a81]">
-                    <span class="font-bold text-[#1c1917]">Trang lẻ (In 2 mặt)</span>
+                  <label class="flex items-center gap-2 p-2 rounded-lg border border-[#d6c8b6] bg-[#f9f6f0] cursor-pointer has-[:checked]:border-[#5000ff] has-[:checked]:bg-[#ede9fe]" title="Nối đề kế tiếp ngay trang sau, không thêm trang trắng (dùng khi in 1 mặt)">
+                    <input type="radio" name="mergeBreakType" value="nextPage" class="accent-[#5000ff]">
+                    <span class="font-bold text-[#1c1917]">Ghép sát (In 1 mặt)</span>
                   </label>
                 </div>
               </div>
               <div class="space-y-1.5">
                 <label for="mergeOutputName" class="font-extrabold text-[#1c1917] block">Tên file xuất ra (.docx):</label>
                 <input type="text" id="mergeOutputName" value="Ghep_De_Thi_Khoa_Trang.docx" class="w-full rounded-lg border border-[#d6c8b6] bg-white px-3 py-2 text-xs font-semibold text-[#1c1917] focus:outline-none focus:border-[#5000ff] focus:ring-2 focus:ring-[#5000ff]/20" placeholder="Ghep_De_Thi_Khoa_Trang.docx" />
+              </div>
+              <p id="mergeBreakHint" class="sm:col-span-2 text-[11px] text-[#0d8a81] leading-relaxed font-medium pt-2 border-t border-[#e5dcd0]">
+                Nếu số trang của đề là số lẻ (3, 5...) thì tự chèn 1 mặt trắng thành số chẵn (4, 6...) để khi in 2 mặt / xuất PDF. Nếu số trang của đề là chẵn (2, 4...) thì giữ nguyên.
+              </p>
+            </div>
+
+            <!-- Custom Margins Option (mm) -->
+            <div class="ct-inner-card p-3.5 text-xs space-y-3">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input type="checkbox" id="optMergeCustomMargins" class="mt-0.5 rounded accent-[#5000ff]">
+                <span>
+                  <strong class="text-[#1c1917] block">Tùy chỉnh lề trang đồng bộ (mm)</strong>
+                  <span class="text-[#57534e]">Tích chọn để áp dụng chung kích thước lề (Trên, Dưới, Trái, Phải) cho toàn bộ các đề sau khi ghép; bỏ tích sẽ giữ nguyên lề gốc của từng đề</span>
+                </span>
+              </label>
+              <div id="mergeCustomMarginsBox" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-[#e5dcd0]">
+                <div class="space-y-1">
+                  <label for="mergeMarginTop" class="font-bold text-[#1c1917] block">Lề trên (mm)</label>
+                  <input type="number" id="mergeMarginTop" value="15" min="3" max="60" step="0.5" class="w-full rounded-lg border border-[#d6c8b6] bg-white px-2.5 py-1.5 text-xs font-bold text-[#1c1917] focus:outline-none focus:border-[#5000ff] focus:ring-2 focus:ring-[#5000ff]/20" />
+                </div>
+                <div class="space-y-1">
+                  <label for="mergeMarginBottom" class="font-bold text-[#1c1917] block">Lề dưới (mm)</label>
+                  <input type="number" id="mergeMarginBottom" value="15" min="3" max="60" step="0.5" class="w-full rounded-lg border border-[#d6c8b6] bg-white px-2.5 py-1.5 text-xs font-bold text-[#1c1917] focus:outline-none focus:border-[#5000ff] focus:ring-2 focus:ring-[#5000ff]/20" />
+                </div>
+                <div class="space-y-1">
+                  <label for="mergeMarginLeft" class="font-bold text-[#1c1917] block">Lề trái (mm)</label>
+                  <input type="number" id="mergeMarginLeft" value="20" min="3" max="60" step="0.5" class="w-full rounded-lg border border-[#d6c8b6] bg-white px-2.5 py-1.5 text-xs font-bold text-[#1c1917] focus:outline-none focus:border-[#5000ff] focus:ring-2 focus:ring-[#5000ff]/20" />
+                </div>
+                <div class="space-y-1">
+                  <label for="mergeMarginRight" class="font-bold text-[#1c1917] block">Lề phải (mm)</label>
+                  <input type="number" id="mergeMarginRight" value="15" min="3" max="60" step="0.5" class="w-full rounded-lg border border-[#d6c8b6] bg-white px-2.5 py-1.5 text-xs font-bold text-[#1c1917] focus:outline-none focus:border-[#5000ff] focus:ring-2 focus:ring-[#5000ff]/20" />
+                </div>
               </div>
             </div>
           </div>
@@ -901,7 +933,7 @@
       <div class="flex flex-wrap items-center justify-center gap-3 text-xs font-bold">
         <a href="https://www.chamthi.io.vn/" target="_blank" rel="noopener" class="text-[#fde68a] hover:text-white transition"><i class="fas fa-globe mr-1"></i> chamthi.io.vn</a>
         <span class="opacity-40">•</span>
-        <a href="https://tronde.chamthi.io.vn/" class="text-[#fde68a] hover:text-white transition"><i class="fas fa-random mr-1"></i> Trộn đề TRONDE 2025</a>
+        <a href="https://tronde.chamthi.io.vn/" target="_blank" rel="noopener" class="text-[#fde68a] hover:text-white transition"><i class="fas fa-random mr-1"></i> Trộn đề TRONDE 2025</a>
         <span class="opacity-40">•</span>
         <a href="https://zalo.me/0989059009" target="_blank" rel="noopener" class="text-[#fde68a] hover:text-white transition"><i class="fas fa-phone-alt mr-1"></i> 0989.059.009</a>
       </div>
@@ -6345,7 +6377,20 @@
       if (zip.file("docProps/app.xml")) {
         const appStr = await zip.file("docProps/app.xml").async("string");
         const m = appStr.match(/<Pages>(\d+)<\/Pages>/i);
-        if (m) pageHint = m[1];
+        if (m && parseInt(m[1], 10) > 0) pageHint = m[1];
+      }
+      if (!pageHint) {
+        // Fallback: đếm ngắt trang tường minh (<w:br w:type="page"/>) và <w:lastRenderedPageBreak/> trong document.xml
+        const explicitBreaks = Array.from(docDom.getElementsByTagNameNS("*", "br")).filter(b =>
+          (b.getAttribute("w:type") || b.getAttributeNS(W_NS, "type") || b.getAttribute("type")) === "page"
+        ).length;
+        const renderedBreaks = docDom.getElementsByTagNameNS("*", "lastRenderedPageBreak").length;
+        const pageBreakBeforeCount = Array.from(docDom.getElementsByTagNameNS("*", "pageBreakBefore")).filter(el => {
+          const v = el.getAttribute("w:val") || el.getAttribute("val");
+          return v !== "0" && v !== "false";
+        }).length;
+        const est = 1 + explicitBreaks + renderedBreaks + pageBreakBeforeCount;
+        if (est > 1) pageHint = String(est);
       }
 
       return {
@@ -6357,7 +6402,8 @@
         headerPreview: headerTexts[0] || "",
         footerPreview: footerTexts[0] || "",
         hasNumPages,
-        pageHint
+        pageHint,
+        detectedPages: pageHint ? parseInt(pageHint, 10) : 0
       };
     }
 
@@ -6370,6 +6416,34 @@
       const lockHF = options.lockHF !== false;
       const lockPageNumbers = options.lockPageNumbers !== false;
       const breakType = options.breakType === "oddPage" ? "oddPage" : "nextPage";
+      const customMargins = options.customMargins && options.customMargins.enabled ? options.customMargins : null;
+      const mmToTwips = (mm) => Math.max(170, Math.round((Number(mm) / 25.4) * 1440));
+
+      function applyCustomMarginsToSectPr(sectPr, docDomRef) {
+        if (!customMargins || !sectPr) return;
+        const topTw = mmToTwips(customMargins.top);
+        const botTw = mmToTwips(customMargins.bottom);
+        const leftTw = mmToTwips(customMargins.left);
+        const rightTw = mmToTwips(customMargins.right);
+        let pgMar = Array.from(sectPr.children).find(c => c.localName === "pgMar");
+        if (!pgMar) {
+          pgMar = docDomRef.createElementNS(W_NS, "w:pgMar");
+          sectPr.appendChild(pgMar);
+        }
+        pgMar.setAttribute("w:top", String(topTw));
+        pgMar.setAttribute("w:bottom", String(botTw));
+        pgMar.setAttribute("w:left", String(leftTw));
+        pgMar.setAttribute("w:right", String(rightTw));
+        // Đảm bảo khoảng cách header/footer không vượt quá lề trên/dưới mới
+        const curHdr = parseInt(pgMar.getAttribute("w:header") || pgMar.getAttribute("header") || "708", 10);
+        const curFtr = parseInt(pgMar.getAttribute("w:footer") || pgMar.getAttribute("footer") || "708", 10);
+        const safeHdr = Math.min(isNaN(curHdr) ? 708 : curHdr, Math.max(200, topTw - 140));
+        const safeFtr = Math.min(isNaN(curFtr) ? 708 : curFtr, Math.max(200, botTw - 140));
+        pgMar.setAttribute("w:header", String(safeHdr));
+        pgMar.setAttribute("w:footer", String(safeFtr));
+        if (!pgMar.hasAttribute("w:gutter")) pgMar.setAttribute("w:gutter", "0");
+        sortSectPrChildren(sectPr);
+      }
 
       const serializer = new XMLSerializer();
       const parser = new DOMParser();
@@ -6603,6 +6677,57 @@
         bodyEl.appendChild(breakP);
       }
 
+      // Chèn 1 trang trắng thực sự (hiển thị rõ trong Word, Print Preview, PDF, WPS, LibreOffice)
+      // Không có Header/Footer và nằm trong Section riêng để không làm thay đổi SECTIONPAGES (1/3, 2/3, 3/3) của đề trước
+      function createBlankBackPageSectPr(templateSectPr, docDomRef) {
+        const blankSect = docDomRef.createElementNS(W_NS, "w:sectPr");
+        const addRef = (tag, type, rid) => {
+          const el = docDomRef.createElementNS(W_NS, "w:" + tag);
+          el.setAttribute("w:type", type);
+          el.setAttributeNS(R_NS, "r:id", rid);
+          blankSect.appendChild(el);
+        };
+        addRef("headerReference", "default", getEmptyHdrRid());
+        addRef("footerReference", "default", getEmptyFtrRid());
+        if (globalEvenOdd) {
+          addRef("headerReference", "even", getEmptyHdrRid());
+          addRef("footerReference", "even", getEmptyFtrRid());
+        }
+        const typeEl = docDomRef.createElementNS(W_NS, "w:type");
+        typeEl.setAttribute("w:val", "nextPage");
+        blankSect.appendChild(typeEl);
+        if (templateSectPr) {
+          const pgSz = Array.from(templateSectPr.children).find(c => c.localName === "pgSz");
+          const pgMar = Array.from(templateSectPr.children).find(c => c.localName === "pgMar");
+          if (pgSz) blankSect.appendChild(pgSz.cloneNode(true));
+          if (pgMar) blankSect.appendChild(pgMar.cloneNode(true));
+        }
+        applyCustomMarginsToSectPr(blankSect, docDomRef);
+        sortSectPrChildren(blankSect);
+        return blankSect;
+      }
+
+      function appendExplicitBlankPage(bodyEl, templateSectPr, docDomRef, isFinalSectionInDoc) {
+        const blankSect = createBlankBackPageSectPr(templateSectPr, docDomRef);
+        const blankP = docDomRef.createElementNS(W_NS, "w:p");
+        const pPr = docDomRef.createElementNS(W_NS, "w:pPr");
+        const r = docDomRef.createElementNS(W_NS, "w:r");
+        const t = docDomRef.createElementNS(W_NS, "w:t");
+        t.setAttribute("xml:space", "preserve");
+        t.textContent = " ";
+        r.appendChild(t);
+        if (isFinalSectionInDoc) {
+          blankP.appendChild(r);
+          bodyEl.appendChild(blankP);
+          bodyEl.appendChild(blankSect);
+        } else {
+          pPr.appendChild(blankSect);
+          blankP.appendChild(pPr);
+          blankP.appendChild(r);
+          bodyEl.appendChild(blankP);
+        }
+      }
+
       // Chuẩn bị numbering.xml, styles.xml, fontTable.xml, footnotes.xml, endnotes.xml của baseZip
       let baseNumDom = baseZip.file("word/numbering.xml")
         ? parser.parseFromString(await baseZip.file("word/numbering.xml").async("string"), "text/xml")
@@ -6692,16 +6817,27 @@
           }
         }
 
+        if (customMargins) {
+          for (const sp of sectPrs0) applyCustomMarginsToSectPr(sp, baseDocDom);
+        }
+
         // Gỡ bỏ <w:sectPr> cuối khỏi baseBody và gắn vào đoạn cuối của File 0 để nhường chỗ cho các file sau
         let bodySectPr0 = Array.from(baseBody.children).find(c => c.localName === "sectPr");
         if (!bodySectPr0) {
           bodySectPr0 = baseDocDom.createElementNS(W_NS, "w:sectPr");
           locked0 += lockSectionHeaderFooters(bodySectPr0, baseDocDom, fileHasEvenOdd[0], lockHF);
           if (lockPageNumbers) lockSectionPageStart(bodySectPr0, baseDocDom);
+          applyCustomMarginsToSectPr(bodySectPr0, baseDocDom);
         } else {
           baseBody.removeChild(bodySectPr0);
         }
         attachClosingSectPrToBody(baseBody, bodySectPr0, baseDocDom, bmName0);
+
+        let addedBlank0 = false;
+        if (breakType === "oddPage" && fileItems[0].detectedPages > 0 && fileItems[0].detectedPages % 2 === 1) {
+          appendExplicitBlankPage(baseBody, bodySectPr0, baseDocDom, false);
+          addedBlank0 = true;
+        }
 
         totalLockedHF += locked0;
         totalFixedFields += fixed0;
@@ -6712,8 +6848,8 @@
           sections: sectPrs0.length || 1,
           fixedFields: fixed0,
           fieldMode: isMultiSect0 ? "PAGEREF" : "SECTIONPAGES",
-          resources: "File gốc nền",
-          status: "✓ Đã khóa chuẩn"
+          resources: addedBlank0 ? `File gốc • +1 trang trắng (${fileItems[0].detectedPages}→${fileItems[0].detectedPages + 1} trang)` : "File gốc nền",
+          status: addedBlank0 ? "✓ Đã khóa & chẵn trang" : "✓ Đã khóa chuẩn"
         });
       }
 
@@ -7086,6 +7222,10 @@
         }
         importedSectPrs.push(srcBodySectPr);
 
+        if (customMargins) {
+          for (const sp of importedSectPrs) applyCustomMarginsToSectPr(sp, baseDocDom);
+        }
+
         // Section đầu tiên của File k chịu trách nhiệm:
         // - Kiểu ngắt trang từ File k-1 sang File k (nextPage hoặc oddPage)
         // - Reset đánh số trang về 1
@@ -7103,11 +7243,16 @@
           }
         }
 
+        const needBlankK = (breakType === "oddPage" && fileItems[k].detectedPages > 0 && fileItems[k].detectedPages % 2 === 1);
+
         // Gắn srcBodySectPr cuối của File k:
-        // - Nếu k < N-1: gắn vào pPr đoạn cuối File k (không tạo trang trắng thừa)
-        // - Nếu k === N-1: gắn trực tiếp vào cuối baseBody (cộng thêm bookmark cuối nếu đề nhiều section)
-        if (k < fileItems.length - 1) {
+        // - Nếu k < N-1 hoặc cần chèn 1 trang trắng phía sau File k: gắn srcBodySectPr vào pPr đoạn cuối File k
+        // - Nếu k === N-1 và không cần trang trắng: gắn trực tiếp vào cuối baseBody
+        if (k < fileItems.length - 1 || needBlankK) {
           attachClosingSectPrToBody(baseBody, srcBodySectPr, baseDocDom, bmNameK);
+          if (needBlankK) {
+            appendExplicitBlankPage(baseBody, srcBodySectPr, baseDocDom, k === fileItems.length - 1);
+          }
         } else {
           if (bmNameK) {
             const lastEl = baseBody.lastElementChild;
@@ -7124,6 +7269,8 @@
 
         totalLockedHF += lockedK;
         totalFixedFields += fixedFieldsK;
+        const resParts = [`${copiedAssetsCount} ảnh/OLE • ${mergedNumsCount} list`];
+        if (needBlankK) resParts.push(`+1 trang trắng (${fileItems[k].detectedPages}→${fileItems[k].detectedPages + 1} trang)`);
         auditRows.push({
           idx: k + 1,
           name: fileItems[k].name,
@@ -7131,8 +7278,8 @@
           sections: importedSectPrs.length,
           fixedFields: fixedFieldsK,
           fieldMode: isMultiSectK ? "PAGEREF" : "SECTIONPAGES",
-          resources: `${copiedAssetsCount} ảnh/OLE • ${mergedNumsCount} list`,
-          status: "✓ Đã khóa & ghép"
+          resources: resParts.join(" • "),
+          status: needBlankK ? "✓ Đã khóa & chẵn trang" : "✓ Đã khóa & ghép"
         });
       }
 
@@ -7176,9 +7323,12 @@
   <Override PartName="/word/header1.xml" ContentType="${HEADER_CT}"/>
   <Override PartName="/word/footer1.xml" ContentType="${FOOTER_CT}"/>
 </Types>`);
+      z.file("docProps/app.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Pages>${pageCount}</Pages></Properties>`);
       z.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="${PKG_REL_NS}">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
 </Relationships>`);
       z.file("word/_rels/document.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="${PKG_REL_NS}">
@@ -7388,9 +7538,21 @@
         const lockHF = document.getElementById("optMergeLockHF").checked;
         const lockPageNumbers = document.getElementById("optMergeLockPageNum").checked;
         const breakEl = document.querySelector('input[name="mergeBreakType"]:checked');
-        const breakType = breakEl ? breakEl.value : "nextPage";
+        const breakType = breakEl ? breakEl.value : "oddPage";
+        const useCustomMargins = document.getElementById("optMergeCustomMargins").checked;
+        const parseMm = (id, defVal) => {
+          const v = parseFloat(document.getElementById(id).value);
+          return (!isNaN(v) && v >= 3 && v <= 60) ? v : defVal;
+        };
+        const customMargins = useCustomMargins ? {
+          enabled: true,
+          top: parseMm("mergeMarginTop", 15),
+          bottom: parseMm("mergeMarginBottom", 15),
+          left: parseMm("mergeMarginLeft", 20),
+          right: parseMm("mergeMarginRight", 15)
+        } : null;
 
-        const result = await mergeExamDocxFiles(mergeQueue, { lockHF, lockPageNumbers, breakType });
+        const result = await mergeExamDocxFiles(mergeQueue, { lockHF, lockPageNumbers, breakType, customMargins });
 
         const rawName = (document.getElementById("mergeOutputName").value || "").trim() || `Ghep_${mergeQueue.length}_De_Thi_Khoa_Trang.docx`;
         mergedOutFileName = /\.docx$/i.test(rawName) ? rawName : rawName + ".docx";
@@ -7433,6 +7595,25 @@
         runBtn.innerHTML = origHtml;
       }
     }
+
+    document.querySelectorAll('input[name="mergeBreakType"]').forEach(radio => {
+      radio.addEventListener("change", () => {
+        const hintEl = document.getElementById("mergeBreakHint");
+        if (!hintEl) return;
+        if (radio.value === "oddPage") {
+          hintEl.className = "sm:col-span-2 text-[11px] text-[#0d8a81] leading-relaxed font-medium pt-2 border-t border-[#e5dcd0]";
+          hintEl.textContent = "Nếu số trang của đề là số lẻ (3, 5...) thì tự chèn 1 mặt trắng thành số chẵn (4, 6...) để khi in 2 mặt / xuất PDF. Nếu số trang của đề là chẵn (2, 4...) thì giữ nguyên.";
+        } else {
+          hintEl.className = "sm:col-span-2 text-[11px] text-[#57534e] leading-relaxed pt-2 border-t border-[#e5dcd0]";
+          hintEl.textContent = "• Đề kế tiếp nối ngay trang sau, không chèn thêm mặt trắng (phù hợp khi in 1 mặt).";
+        }
+      });
+    });
+
+    document.getElementById("optMergeCustomMargins").addEventListener("change", (e) => {
+      const box = document.getElementById("mergeCustomMarginsBox");
+      if (box) box.classList.toggle("hidden", !e.target.checked);
+    });
 
     document.getElementById("runMergeDocxBtn").addEventListener("click", executeMergeAction);
 
