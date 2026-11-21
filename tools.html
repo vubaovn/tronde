@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TDO-TOOLS • Bộ Công Cụ Ghép Đề Thi Để In &amp; MathType ⇄ Equation — TRONDE 2025</title>
+  <title>TDO-TOOLS • Ghép Đề Thi Word / PDF Để In &amp; MathType ⇄ Equation — TRONDE 2025</title>
   <link href="https://www.chamthi.io.vn/favicon.ico" rel="icon" type="image/x-icon"/>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -395,7 +396,7 @@
     <div class="ct-container ct-topbar-inner">
       <div class="ct-topbar-left">
         <span class="ct-status-pill"><i class="fas fa-toolbox"></i> TDO-TOOLS</span>
-        <span class="ct-topbar-hide-sm">Bộ công cụ Word đề thi: <strong style="color:#fde68a;">Ghép để in • MathType ⇄ Equation</strong></span>
+        <span class="ct-topbar-hide-sm">Bộ công cụ đề thi: <strong style="color:#fde68a;">Ghép Word / PDF để in • MathType ⇄ Equation</strong></span>
       </div>
       <div class="ct-topbar-right">
         <a class="ct-topbar-hide-sm" href="https://www.chamthi.io.vn/" target="_blank" rel="noopener"><i class="fas fa-mobile-alt"></i> Chấm TN VB 2025</a>
@@ -414,7 +415,7 @@
       <!-- Navigation Buttons -->
       <nav class="ct-nav">
         <button type="button" id="tabBtnMerge" data-tab="merge" class="meq-tab-btn ct-nav-btn is-active">
-          <i class="fas fa-layer-group"></i> GHÉP FILE WORD ĐỀ THI
+          <i class="fas fa-layer-group"></i> GHÉP ĐỀ WORD / PDF
         </button>
         <button type="button" id="tabBtnDocx" data-tab="docx" class="meq-tab-btn ct-nav-btn">
           <i class="fas fa-square-root-alt"></i> MATHTYPE ⇄ EQUATION
@@ -443,7 +444,7 @@
     <div id="ct-mobile-drawer" class="ct-mobile-drawer">
       <div class="ct-drawer-grid">
         <button type="button" data-tab="merge" class="meq-tab-btn ct-nav-btn is-active">
-          <i class="fas fa-layer-group"></i> GHÉP FILE WORD ĐỀ THI
+          <i class="fas fa-layer-group"></i> GHÉP ĐỀ WORD / PDF
         </button>
         <button type="button" data-tab="docx" class="meq-tab-btn ct-nav-btn">
           <i class="fas fa-square-root-alt"></i> MATHTYPE ⇄ EQUATION
@@ -479,18 +480,18 @@
       <div class="space-y-3 max-w-3xl">
         <div class="flex flex-wrap items-center gap-2">
           <span id="heroBadgePrimary" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide bg-[#0d8a81] text-white shadow-sm">
-            <i class="fas fa-layer-group"></i> GHÉP ĐỀ THI WORD CHUẨN IN ẤN
+            <i class="fas fa-layer-group"></i> GHÉP ĐỀ THI WORD / PDF CHUẨN IN ẤN
           </span>
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wide bg-[#fff8d6] text-[#92400e] border border-[#fbbf24]">
             <i class="fas fa-bolt"></i> KHÔNG CẦN CÀI PHẦN MỀM • CHẠY TRÊN TRÌNH DUYỆT
           </span>
         </div>
         <h1 id="heroTitle" class="text-xl sm:text-2xl font-extrabold text-[#1c1917] leading-tight">
-          Ghép nhiều file Word đề thi thành 1 file dài — Khóa nguyên Header/Footer &amp; đánh số trang.
+          Ghép nhiều file Word (.docx) hoặc PDF (.pdf) thành 1 file dài — Khóa nguyên Header/Footer &amp; tự chẵn trang in 2 mặt.
         </h1>
         <p id="heroDesc" class="text-xs sm:text-sm text-[#44403c] leading-relaxed">
-          <i class="fas fa-check text-[#145a32] mr-1"></i> Tự động <strong>khóa cứng Header &amp; Footer</strong> độc lập cho từng đề (ngắt Link to Previous), giữ nguyên mã đề ở chân trang.<br />
-          <i class="fas fa-check text-[#145a32] mr-1"></i> Giữ nguyên đánh số trang <strong>1/4, 2/4, 3/4, 4/4</strong> của từng đề (tự chuyển NUMPAGES ➔ SECTIONPAGES/PAGEREF) và hỗ trợ ngắt <strong>Trang lẻ in 2 mặt</strong>.
+          <i class="fas fa-check text-[#145a32] mr-1"></i> Tự động <strong>khóa cứng Header &amp; Footer</strong> độc lập cho từng đề Word (ngắt Link to Previous) và bảo toàn nguyên bản trang PDF.<br />
+          <i class="fas fa-check text-[#145a32] mr-1"></i> Giữ nguyên đánh số trang <strong>1/4, 2/4, 3/4, 4/4</strong> của từng đề và tự chèn <strong>1 mặt trắng thành số chẵn</strong> cho đề lẻ trang khi in 2 mặt.
         </p>
       </div>
       <div class="flex flex-col gap-2 shrink-0 w-full lg:w-auto lg:min-w-[280px]">
@@ -504,7 +505,11 @@
         </button>
         <button type="button" id="loadSampleMergeBtn" class="ct-btn-amber px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2">
           <i class="fas fa-bolt text-[#92400e]"></i>
-          <span>Thử ngay với 3 đề mẫu (Mã 101–103)</span>
+          <span>Thử 3 đề mẫu Word (Mã 101–103)</span>
+        </button>
+        <button type="button" id="loadSampleMergePdfBtn" class="hidden ct-btn-amber px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2">
+          <i class="fas fa-bolt text-[#92400e]"></i>
+          <span>Thử 3 đề mẫu PDF (Mã 101–103)</span>
         </button>
       </div>
     </div>
@@ -705,12 +710,38 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <!-- Left Column: Upload & File Queue + Options -->
         <div class="lg:col-span-8 ct-card p-5 sm:p-6 space-y-5">
+          <!-- Mode Switcher: Word (.docx) vs PDF (.pdf) -->
+          <div class="space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-[#efe8de] p-1.5 rounded-2xl border border-[#d6c8b6]">
+              <button type="button" id="mergeModeBtnDocx" class="flex items-center justify-between gap-2.5 p-3 rounded-xl text-left transition bg-white text-[#1c1917] shadow-sm border-2 border-[#5000ff]">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-8 h-8 rounded-lg bg-[#5000ff] text-white flex items-center justify-center font-extrabold text-sm shrink-0"><i class="fas fa-file-word"></i></span>
+                  <div>
+                    <span class="text-xs sm:text-sm font-extrabold block">GHÉP FILE WORD (.docx)</span>
+                    <span class="text-[11px] text-[#57534e] block">Khóa Header/Footer, số trang 1/4 &amp; chẵn trang in 2 mặt</span>
+                  </div>
+                </div>
+                <span id="badgeMergeDocx" class="text-[10px] font-extrabold bg-[#ede9fe] text-[#5000ff] px-2 py-0.5 rounded-full shrink-0">Đang chọn</span>
+              </button>
+              <button type="button" id="mergeModeBtnPdf" class="flex items-center justify-between gap-2.5 p-3 rounded-xl text-left transition text-[#57534e] hover:bg-white/70 border-2 border-transparent">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-8 h-8 rounded-lg bg-rose-600 text-white flex items-center justify-center font-extrabold text-sm shrink-0"><i class="fas fa-file-pdf"></i></span>
+                  <div>
+                    <span class="text-xs sm:text-sm font-extrabold block">GHÉP FILE PDF (.pdf)</span>
+                    <span class="text-[11px] text-[#57534e] block">Giữ nguyên 100% bố cục, tự chèn mặt trắng chẵn trang</span>
+                  </div>
+                </div>
+                <span id="badgeMergePdf" class="hidden text-[10px] font-extrabold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full shrink-0">Đang chọn</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Step 1: Multi-file Dropzone -->
           <div class="space-y-2.5">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2.5">
                 <span class="w-7 h-7 rounded-lg bg-[#5000ff] text-white font-extrabold text-xs flex items-center justify-center shadow-sm">1</span>
-                <h2 class="text-sm sm:text-base font-extrabold text-[#1c1917]">Chọn nhiều file Word đề thi (.docx) cần ghép</h2>
+                <h2 id="mergeStep1Heading" class="text-sm sm:text-base font-extrabold text-[#1c1917]">Chọn nhiều file Word đề thi (.docx) cần ghép</h2>
               </div>
               <div class="flex flex-wrap items-center gap-1.5">
                 <button type="button" id="mergeSortAscBtn" class="ct-btn-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg" title="Sắp xếp tự nhiên theo tên file (VD: Mã 101, 102, 103)">
@@ -726,14 +757,14 @@
             </div>
 
             <label for="mergeFilesInput" id="mergeDropZone" class="group flex flex-col items-center justify-center border-2 border-dashed border-[#0d8a81]/65 hover:border-[#0d8a81] bg-white hover:bg-[#f0fdfa] rounded-2xl p-5 sm:p-6 cursor-pointer transition text-center shadow-sm hover:shadow-md">
-              <input type="file" id="mergeFilesInput" accept=".docx" multiple class="hidden">
-              <div class="w-12 h-12 rounded-2xl bg-[#0d8a81] group-hover:bg-[#0a6e67] text-white shadow-md shadow-[#0d8a81]/25 flex items-center justify-center text-lg font-extrabold mb-2.5 select-none transition-transform group-hover:scale-105">
+              <input type="file" id="mergeFilesInput" accept=".docx,.pdf" multiple class="hidden">
+              <div id="mergeDropZoneIcon" class="w-12 h-12 rounded-2xl bg-[#0d8a81] group-hover:bg-[#0a6e67] text-white shadow-md shadow-[#0d8a81]/25 flex items-center justify-center text-lg font-extrabold mb-2.5 select-none transition-transform group-hover:scale-105">
                 <i class="fas fa-layer-group"></i>
               </div>
-              <p class="text-sm sm:text-base font-extrabold text-[#1c1917] group-hover:text-[#0d8a81]">
+              <p id="mergeDropTitle" class="text-sm sm:text-base font-extrabold text-[#1c1917] group-hover:text-[#0d8a81]">
                 Nhấn để chọn nhiều file Word (.docx) hoặc kéo thả cả thư mục đề vào đây
               </p>
-              <p class="text-xs text-[#57534e] mt-1">
+              <p id="mergeDropSub" class="text-xs text-[#57534e] mt-1">
                 Có thể chọn nhiều lần để thêm nối tiếp • Hỗ trợ đầy đủ công thức <strong class="text-[#5000ff]">MathType / Equation</strong>, hình ảnh, bảng biểu và Header/Footer riêng từng mã đề
               </p>
             </label>
@@ -761,7 +792,7 @@
               <h2 class="text-sm sm:text-base font-extrabold text-[#1c1917]">Cấu hình khóa Header/Footer &amp; chế độ in ấn</h2>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 ct-inner-card p-3.5 text-xs">
+            <div id="mergeDocxLockOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-3 ct-inner-card p-3.5 text-xs">
               <label class="flex items-start gap-2.5 cursor-pointer">
                 <input type="checkbox" id="optMergeLockHF" checked class="mt-0.5 rounded accent-[#0d8a81]">
                 <span>
@@ -776,6 +807,13 @@
                   <span class="text-[#57534e]">Reset số trang về 1 ở đầu mỗi đề và tự đổi <code class="bg-[#f9f6f0] px-1 rounded font-semibold text-[#5000ff]">NUMPAGES</code> ➔ <code class="bg-[#f9f6f0] px-1 rounded font-semibold text-[#0d8a81]">SECTIONPAGES</code></span>
                 </span>
               </label>
+            </div>
+            <div id="mergePdfLockInfo" class="hidden ct-inner-card p-3.5 text-xs bg-rose-50/60 border-rose-200 flex items-start gap-2.5">
+              <i class="fas fa-shield-alt text-rose-600 text-sm mt-0.5 shrink-0"></i>
+              <div class="text-[#44403c]">
+                <strong class="text-[#1c1917] block">Định dạng PDF tự động khóa cứng 100% Header, Footer &amp; Số trang gốc</strong>
+                Mọi trang đề PDF được ghép nguyên bản vector/font sắc nét, không bao giờ nhảy mã đề hay lệch số trang <code class="bg-white px-1 rounded font-semibold text-rose-700">1/4, 2/4...</code> của từng đề.
+              </div>
             </div>
 
             <!-- Break Type + Output Filename -->
@@ -794,7 +832,7 @@
                 </div>
               </div>
               <div class="space-y-1.5">
-                <label for="mergeOutputName" class="font-extrabold text-[#1c1917] block">Tên file xuất ra (.docx):</label>
+                <label for="mergeOutputName" id="mergeOutputNameLabel" class="font-extrabold text-[#1c1917] block">Tên file xuất ra (.docx):</label>
                 <input type="text" id="mergeOutputName" value="Ghep_De_Thi_Khoa_Trang.docx" class="w-full rounded-lg border border-[#d6c8b6] bg-white px-3 py-2 text-xs font-semibold text-[#1c1917] focus:outline-none focus:border-[#5000ff] focus:ring-2 focus:ring-[#5000ff]/20" placeholder="Ghep_De_Thi_Khoa_Trang.docx" />
               </div>
               <p id="mergeBreakHint" class="sm:col-span-2 text-[11px] text-[#0d8a81] leading-relaxed font-medium pt-2 border-t border-[#e5dcd0]">
@@ -851,7 +889,7 @@
                 <span class="w-7 h-7 rounded-lg bg-[#145a32] text-white font-extrabold text-xs flex items-center justify-center shadow-sm">3</span>
                 <h3 class="text-sm font-extrabold uppercase tracking-wide text-[#1c1917]">Kết quả ghép đề</h3>
               </div>
-              <span class="text-[11px] font-extrabold bg-[#ccfbf1] text-[#0d8a81] border border-[#0d8a81]/30 px-2.5 py-0.5 rounded-full">KHÓA HEADER / FOOTER</span>
+              <span id="mergeModeBadgeRight" class="text-[11px] font-extrabold bg-[#ccfbf1] text-[#0d8a81] border border-[#0d8a81]/30 px-2.5 py-0.5 rounded-full">WORD • KHÓA TRANG</span>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
@@ -860,11 +898,11 @@
                 <span id="statMergeFiles" class="text-2xl font-extrabold text-[#5000ff]">0</span>
               </div>
               <div class="bg-white border border-[#e5dcd0] rounded-xl p-3">
-                <span class="text-xs text-[#57534e] block">Header/Footer đã khóa</span>
+                <span id="statMergeMetric2Label" class="text-xs text-[#57534e] block">Header/Footer đã khóa</span>
                 <span id="statMergeLockedHF" class="text-2xl font-extrabold text-[#0d8a81]">0</span>
               </div>
               <div class="bg-white border border-[#e5dcd0] rounded-xl p-3">
-                <span class="text-xs text-[#57534e] block">Trường tổng trang đã khóa</span>
+                <span id="statMergeMetric3Label" class="text-xs text-[#57534e] block">Trường tổng trang đã khóa</span>
                 <span id="statMergeFixedFields" class="text-2xl font-extrabold text-[#145a32]">0</span>
               </div>
               <div class="bg-white border border-[#e5dcd0] rounded-xl p-3">
@@ -941,7 +979,7 @@
     <div class="ct-footer-bottom py-3">
       <div class="ct-container flex flex-col sm:flex-row items-center justify-between text-[11px] sm:text-xs text-slate-300 gap-1.5 text-center">
         <div><b>© A.I - Edit by Lê Văn Chuyên — THPT Hiệp Hòa số 3</b></div>
-        <div><b>Bộ công cụ xử lý &amp; ghép đề thi Word (.docx)</b></div>
+        <div><b>Bộ công cụ xử lý &amp; ghép đề thi Word (.docx) / PDF (.pdf)</b></div>
       </div>
     </div>
   </footer>
@@ -5258,18 +5296,21 @@
       const sampleBtn1 = document.getElementById("loadSampleBtn");
       const sampleBtn2 = document.getElementById("loadSampleEqToMtBtn");
       const sampleMergeBtn = document.getElementById("loadSampleMergeBtn");
+      const sampleMergePdfBtn = document.getElementById("loadSampleMergePdfBtn");
 
       if (isMerge) {
-        if (heroBadge) heroBadge.innerHTML = '<i class="fas fa-layer-group"></i> GHÉP ĐỀ THI WORD CHUẨN IN ẤN';
-        if (heroTitle) heroTitle.textContent = "Ghép nhiều file Word đề thi thành 1 file dài — Khóa nguyên Header/Footer & đánh số trang.";
+        if (heroBadge) heroBadge.innerHTML = '<i class="fas fa-layer-group"></i> GHÉP ĐỀ THI WORD / PDF CHUẨN IN ẤN';
+        if (heroTitle) heroTitle.textContent = "Ghép nhiều file Word (.docx) hoặc PDF (.pdf) thành 1 file dài — Khóa nguyên Header/Footer & tự chẵn trang in 2 mặt.";
         if (heroDesc) {
           heroDesc.innerHTML =
-            '<i class="fas fa-check text-[#145a32] mr-1"></i> Tự động <strong>khóa cứng Header &amp; Footer</strong> độc lập cho từng đề (ngắt Link to Previous), giữ nguyên mã đề ở chân trang.<br />' +
-            '<i class="fas fa-check text-[#145a32] mr-1"></i> Giữ nguyên đánh số trang <strong>1/4, 2/4, 3/4, 4/4</strong> của từng đề (tự chuyển NUMPAGES ➔ SECTIONPAGES/PAGEREF) và hỗ trợ ngắt <strong>Trang lẻ in 2 mặt</strong>.';
+            '<i class="fas fa-check text-[#145a32] mr-1"></i> Tự động <strong>khóa cứng Header &amp; Footer</strong> độc lập cho từng đề Word (ngắt Link to Previous) và bảo toàn nguyên bản trang PDF.<br />' +
+            '<i class="fas fa-check text-[#145a32] mr-1"></i> Giữ nguyên đánh số trang <strong>1/4, 2/4, 3/4, 4/4</strong> của từng đề và tự chèn <strong>1 mặt trắng thành số chẵn</strong> cho đề lẻ trang khi in 2 mặt.';
         }
         if (sampleBtn1) sampleBtn1.classList.add("hidden");
         if (sampleBtn2) sampleBtn2.classList.add("hidden");
-        if (sampleMergeBtn) sampleMergeBtn.classList.remove("hidden");
+        const isPdfMode = (typeof mergeMode !== "undefined" && mergeMode === "pdf");
+        if (sampleMergeBtn) sampleMergeBtn.classList.toggle("hidden", isPdfMode);
+        if (sampleMergePdfBtn) sampleMergePdfBtn.classList.toggle("hidden", !isPdfMode);
       } else if (isMathML) {
         if (heroBadge) heroBadge.innerHTML = '<i class="fas fa-code"></i> KHÔI PHỤC CHUỖI MATHML';
         if (heroTitle) heroTitle.textContent = "Khôi phục đoạn văn bản bị dính chuỗi <math xmlns=...> sang Word Equation chuẩn.";
@@ -5281,6 +5322,7 @@
         if (sampleBtn1) sampleBtn1.classList.add("hidden");
         if (sampleBtn2) sampleBtn2.classList.add("hidden");
         if (sampleMergeBtn) sampleMergeBtn.classList.add("hidden");
+        if (sampleMergePdfBtn) sampleMergePdfBtn.classList.add("hidden");
       } else {
         if (heroBadge) heroBadge.innerHTML = '<i class="fas fa-square-root-alt"></i> CHUYỂN ĐỔI 2 CHIỀU TRỰC TIẾP';
         if (heroTitle) heroTitle.textContent = "Chuyển đổi 2 chiều MathType ⇄ Word Equation (<m:oMath>).";
@@ -5290,6 +5332,7 @@
             '<i class="fas fa-check text-[#145a32] mr-1"></i> Đóng gói ngược từ Word Equation sang đối tượng <strong>MathType chuẩn</strong> kèm ảnh vector WMF sắc nét, nhấp đúp sửa ngay.';
         }
         if (sampleMergeBtn) sampleMergeBtn.classList.add("hidden");
+        if (sampleMergePdfBtn) sampleMergePdfBtn.classList.add("hidden");
         if (conversionDirection === "eq2mt") {
           if (sampleBtn1) sampleBtn1.classList.add("hidden");
           if (sampleBtn2) sampleBtn2.classList.remove("hidden");
@@ -7377,66 +7420,380 @@
       return await z.generateAsync({ type: "uint8array", compression: "DEFLATE" });
     }
 
-    // ================== UI CONTROLLER CHO TAB GHÉP FILE WORD ==================
-    let mergeQueue = [];
+    // ================== ENGINE GHÉP NHIỀU FILE PDF (.pdf) — GIỮ NGUYÊN BỐ CỤC & TỰ CHẴN TRANG ==================
+    async function inspectSingleExamPdf(name, u8Bytes) {
+      if (typeof window.PDFLib === "undefined") {
+        throw new Error("Thư viện xử lý PDF (pdf-lib) đang tải, vui lòng thử lại sau vài giây.");
+      }
+      let pdfDoc;
+      try {
+        pdfDoc = await window.PDFLib.PDFDocument.load(u8Bytes, { ignoreEncryption: true });
+      } catch (e) {
+        throw new Error(`File "${name}" bị khóa mật khẩu hoặc không phải file PDF hợp lệ.`);
+      }
+      const pageCount = pdfDoc.getPageCount();
+      if (pageCount <= 0) throw new Error(`File "${name}" không có trang nào.`);
+      const firstSize = pdfDoc.getPage(0).getSize();
+      const wMm = Math.round((firstSize.width * 25.4) / 72);
+      const hMm = Math.round((firstSize.height * 25.4) / 72);
+      return {
+        id: "pf_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
+        kind: "pdf",
+        name,
+        bytes: u8Bytes,
+        size: u8Bytes.length,
+        sectionCount: 1,
+        headerPreview: "",
+        footerPreview: `Khổ giấy ${wMm}×${hMm} mm • Đã khóa sẵn Header/Footer gốc`,
+        hasNumPages: false,
+        pageHint: String(pageCount),
+        detectedPages: pageCount
+      };
+    }
+
+    async function mergeExamPdfFiles(fileItems, options = {}) {
+      if (typeof window.PDFLib === "undefined") {
+        throw new Error("Thư viện xử lý PDF (pdf-lib) đang tải, vui lòng thử lại sau vài giây.");
+      }
+      if (!fileItems || fileItems.length < 2) {
+        throw new Error("Cần ít nhất 2 file PDF (.pdf) để thực hiện ghép.");
+      }
+
+      const breakType = options.breakType === "oddPage" ? "oddPage" : "nextPage";
+      const customMargins = options.customMargins && options.customMargins.enabled ? options.customMargins : null;
+      const mmToPt = (mm) => (Number(mm) * 72) / 25.4;
+
+      const mergedPdf = await window.PDFLib.PDFDocument.create();
+      let totalPagesOut = 0;
+      let totalBlankInserted = 0;
+      const auditRows = [];
+
+      for (let k = 0; k < fileItems.length; k++) {
+        const item = fileItems[k];
+        const srcPdf = await window.PDFLib.PDFDocument.load(item.bytes, { ignoreEncryption: true });
+        const srcPageCount = srcPdf.getPageCount();
+        let lastW = 595.28;
+        let lastH = 841.89;
+
+        if (!customMargins) {
+          // Ghép nguyên bản 100% vector, font, kích thước và góc xoay của từng trang PDF
+          const indices = srcPdf.getPageIndices();
+          const copiedPages = await mergedPdf.copyPages(srcPdf, indices);
+          for (const cp of copiedPages) {
+            mergedPdf.addPage(cp);
+            const sz = cp.getSize();
+            const rot = (cp.getRotation && cp.getRotation().angle ? Math.abs(cp.getRotation().angle) : 0) % 180;
+            lastW = rot === 90 ? sz.height : sz.width;
+            lastH = rot === 90 ? sz.width : sz.height;
+          }
+        } else {
+          // Căn lại nội dung từng trang vào khung lề tùy chỉnh (Trên, Dưới, Trái, Phải theo mm)
+          const topPt = mmToPt(customMargins.top);
+          const botPt = mmToPt(customMargins.bottom);
+          const leftPt = mmToPt(customMargins.left);
+          const rightPt = mmToPt(customMargins.right);
+          const srcPages = srcPdf.getPages();
+          for (const sp of srcPages) {
+            const sz = sp.getSize();
+            lastW = sz.width;
+            lastH = sz.height;
+            const outPage = mergedPdf.addPage([sz.width, sz.height]);
+            const emb = await mergedPdf.embedPage(sp);
+            const availW = Math.max(72, sz.width - leftPt - rightPt);
+            const availH = Math.max(72, sz.height - topPt - botPt);
+            const scale = Math.min(availW / emb.width, availH / emb.height);
+            const drawW = emb.width * scale;
+            const drawH = emb.height * scale;
+            const drawX = leftPt + (availW - drawW) / 2;
+            const drawY = botPt + (availH - drawH) / 2;
+            outPage.drawPage(emb, { x: drawX, y: drawY, width: drawW, height: drawH });
+          }
+        }
+
+        totalPagesOut += srcPageCount;
+        let addedBlank = false;
+        if (breakType === "oddPage" && srcPageCount % 2 === 1) {
+          mergedPdf.addPage([lastW, lastH]);
+          totalPagesOut++;
+          totalBlankInserted++;
+          addedBlank = true;
+        }
+
+        const resInfo = addedBlank
+          ? `${srcPageCount} trang gốc • +1 mặt trắng (${srcPageCount}→${srcPageCount + 1} trang)`
+          : `${srcPageCount} trang gốc (giữ nguyên)`;
+
+        auditRows.push({
+          idx: k + 1,
+          name: item.name,
+          footerPreview: item.footerPreview || "PDF nguyên bản",
+          sections: srcPageCount,
+          fixedFields: addedBlank ? 1 : 0,
+          fieldMode: "PDF",
+          resources: resInfo,
+          status: addedBlank ? "✓ Đã ghép & chẵn trang" : "✓ Đã ghép nguyên bản"
+        });
+      }
+
+      const outBytes = await mergedPdf.save();
+      return {
+        bytes: outBytes,
+        totalFiles: fileItems.length,
+        totalPagesOut,
+        totalBlankInserted,
+        auditRows
+      };
+    }
+
+    async function buildSampleExamPdfBytes(maDe, pageCount) {
+      if (typeof window.PDFLib === "undefined") {
+        throw new Error("Thư viện xử lý PDF (pdf-lib) đang tải, vui lòng thử lại sau vài giây.");
+      }
+      const pdfDoc = await window.PDFLib.PDFDocument.create();
+      const fontRegular = await pdfDoc.embedFont(window.PDFLib.StandardFonts.Helvetica);
+      const fontBold = await pdfDoc.embedFont(window.PDFLib.StandardFonts.HelveticaBold);
+      const { rgb } = window.PDFLib;
+
+      for (let p = 1; p <= pageCount; p++) {
+        const page = pdfDoc.addPage([595.28, 841.89]); // A4 portrait
+        page.drawText(`KY THI THU THPT - MA DE ${maDe}`, {
+          x: 360, y: 805, size: 10, font: fontBold, color: rgb(0.35, 0.35, 0.35)
+        });
+        page.drawText(`DE KIEM TRA TOAN - MA DE ${maDe} (Trang ${p}/${pageCount})`, {
+          x: 56, y: 760, size: 15, font: fontBold, color: rgb(0.1, 0.1, 0.1)
+        });
+        page.drawText(`Cau ${(p - 1) * 2 + 1} (Ma ${maDe}): Noi dung cau hoi mau trang ${p} kiem tra ghep PDF giu nguyen chan trang.`, {
+          x: 56, y: 720, size: 11, font: fontRegular, color: rgb(0.15, 0.15, 0.15)
+        });
+        page.drawText(`Cau ${(p - 1) * 2 + 2} (Ma ${maDe}): Khi in 2 mat, neu de co so trang le se tu chen 1 mat trang phia sau.`, {
+          x: 56, y: 695, size: 11, font: fontRegular, color: rgb(0.15, 0.15, 0.15)
+        });
+        page.drawText(`Trang ${p}/${pageCount} - Ma de thi ${maDe}`, {
+          x: 225, y: 34, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.1)
+        });
+      }
+      return await pdfDoc.save();
+    }
+
+    // ================== UI CONTROLLER CHO TAB GHÉP FILE WORD & PDF ==================
+    let mergeMode = "docx"; // "docx" | "pdf"
+    const mergeQueues = { docx: [], pdf: [] };
     let mergedBlobUrl = null;
     let mergedOutFileName = "Ghep_De_Thi_Khoa_Trang.docx";
+
+    function getActiveMergeQueue() {
+      return mergeQueues[mergeMode];
+    }
+
+    function setMergeMode(mode) {
+      mergeMode = mode === "pdf" ? "pdf" : "docx";
+      const isPdf = mergeMode === "pdf";
+
+      const btnDocx = document.getElementById("mergeModeBtnDocx");
+      const btnPdf = document.getElementById("mergeModeBtnPdf");
+      const badgeDocx = document.getElementById("badgeMergeDocx");
+      const badgePdf = document.getElementById("badgeMergePdf");
+      const step1Heading = document.getElementById("mergeStep1Heading");
+      const dz = document.getElementById("mergeDropZone");
+      const dzIcon = document.getElementById("mergeDropZoneIcon");
+      const dzTitle = document.getElementById("mergeDropTitle");
+      const dzSub = document.getElementById("mergeDropSub");
+      const docxLockBox = document.getElementById("mergeDocxLockOptions");
+      const pdfLockInfo = document.getElementById("mergePdfLockInfo");
+      const outLabel = document.getElementById("mergeOutputNameLabel");
+      const outInput = document.getElementById("mergeOutputName");
+      const runBtn = document.getElementById("runMergeDocxBtn");
+      const badgeRight = document.getElementById("mergeModeBadgeRight");
+      const m2Label = document.getElementById("statMergeMetric2Label");
+      const m3Label = document.getElementById("statMergeMetric3Label");
+      const sampleWordBtn = document.getElementById("loadSampleMergeBtn");
+      const samplePdfBtn = document.getElementById("loadSampleMergePdfBtn");
+
+      if (!isPdf) {
+        if (btnDocx) btnDocx.className = "flex items-center justify-between gap-2.5 p-3 rounded-xl text-left transition bg-white text-[#1c1917] shadow-sm border-2 border-[#5000ff]";
+        if (btnPdf) btnPdf.className = "flex items-center justify-between gap-2.5 p-3 rounded-xl text-left transition text-[#57534e] hover:bg-white/70 border-2 border-transparent";
+        if (badgeDocx) badgeDocx.classList.remove("hidden");
+        if (badgePdf) badgePdf.classList.add("hidden");
+        if (step1Heading) step1Heading.textContent = "Chọn nhiều file Word đề thi (.docx) cần ghép";
+        if (dz) dz.className = "group flex flex-col items-center justify-center border-2 border-dashed border-[#0d8a81]/65 hover:border-[#0d8a81] bg-white hover:bg-[#f0fdfa] rounded-2xl p-5 sm:p-6 cursor-pointer transition text-center shadow-sm hover:shadow-md";
+        if (dzIcon) {
+          dzIcon.className = "w-12 h-12 rounded-2xl bg-[#0d8a81] group-hover:bg-[#0a6e67] text-white shadow-md shadow-[#0d8a81]/25 flex items-center justify-center text-lg font-extrabold mb-2.5 select-none transition-transform group-hover:scale-105";
+          dzIcon.innerHTML = '<i class="fas fa-layer-group"></i>';
+        }
+        if (dzTitle) {
+          dzTitle.className = "text-sm sm:text-base font-extrabold text-[#1c1917] group-hover:text-[#0d8a81]";
+          dzTitle.textContent = "Nhấn để chọn nhiều file Word (.docx) hoặc kéo thả cả thư mục đề vào đây";
+        }
+        if (dzSub) dzSub.innerHTML = 'Có thể chọn nhiều lần để thêm nối tiếp • Hỗ trợ đầy đủ công thức <strong class="text-[#5000ff]">MathType / Equation</strong>, hình ảnh, bảng biểu và Header/Footer riêng từng mã đề';
+        if (docxLockBox) docxLockBox.classList.remove("hidden");
+        if (pdfLockInfo) pdfLockInfo.classList.add("hidden");
+        if (outLabel) outLabel.textContent = "Tên file xuất ra (.docx):";
+        if (outInput && (/\.pdf$/i.test(outInput.value) || /^Ghep_/i.test(outInput.value))) {
+          const qLen = mergeQueues.docx.length;
+          outInput.value = qLen > 0 ? `Ghep_${qLen}_De_Thi_Khoa_Trang.docx` : "Ghep_De_Thi_Khoa_Trang.docx";
+        }
+        if (runBtn) runBtn.innerHTML = '<i class="fas fa-object-group"></i> Ghép tất cả thành 1 file Word (.docx)';
+        if (badgeRight) {
+          badgeRight.className = "text-[11px] font-extrabold bg-[#ccfbf1] text-[#0d8a81] border border-[#0d8a81]/30 px-2.5 py-0.5 rounded-full";
+          badgeRight.textContent = "WORD • KHÓA TRANG";
+        }
+        if (m2Label) m2Label.textContent = "Header/Footer đã khóa";
+        if (m3Label) m3Label.textContent = "Trường tổng trang đã khóa";
+      } else {
+        if (btnPdf) btnPdf.className = "flex items-center justify-between gap-2.5 p-3 rounded-xl text-left transition bg-white text-[#1c1917] shadow-sm border-2 border-rose-600";
+        if (btnDocx) btnDocx.className = "flex items-center justify-between gap-2.5 p-3 rounded-xl text-left transition text-[#57534e] hover:bg-white/70 border-2 border-transparent";
+        if (badgePdf) badgePdf.classList.remove("hidden");
+        if (badgeDocx) badgeDocx.classList.add("hidden");
+        if (step1Heading) step1Heading.textContent = "Chọn nhiều file PDF đề thi (.pdf) cần ghép";
+        if (dz) dz.className = "group flex flex-col items-center justify-center border-2 border-dashed border-rose-500/65 hover:border-rose-600 bg-white hover:bg-rose-50/50 rounded-2xl p-5 sm:p-6 cursor-pointer transition text-center shadow-sm hover:shadow-md";
+        if (dzIcon) {
+          dzIcon.className = "w-12 h-12 rounded-2xl bg-rose-600 group-hover:bg-rose-700 text-white shadow-md shadow-rose-600/25 flex items-center justify-center text-lg font-extrabold mb-2.5 select-none transition-transform group-hover:scale-105";
+          dzIcon.innerHTML = '<i class="fas fa-file-pdf"></i>';
+        }
+        if (dzTitle) {
+          dzTitle.className = "text-sm sm:text-base font-extrabold text-[#1c1917] group-hover:text-rose-700";
+          dzTitle.textContent = "Nhấn để chọn nhiều file PDF (.pdf) hoặc kéo thả cả thư mục đề vào đây";
+        }
+        if (dzSub) dzSub.innerHTML = 'Có thể chọn nhiều lần để thêm nối tiếp • Ghép nguyên bản 100% vector, giữ nguyên mã đề, số trang và tự chèn <strong class="text-rose-700">1 mặt trắng</strong> cho đề lẻ trang khi in 2 mặt';
+        if (docxLockBox) docxLockBox.classList.add("hidden");
+        if (pdfLockInfo) pdfLockInfo.classList.remove("hidden");
+        if (outLabel) outLabel.textContent = "Tên file xuất ra (.pdf):";
+        if (outInput && (/\.docx$/i.test(outInput.value) || /^Ghep_/i.test(outInput.value))) {
+          const qLen = mergeQueues.pdf.length;
+          outInput.value = qLen > 0 ? `Ghep_${qLen}_De_Thi_Chuan_In.pdf` : "Ghep_De_Thi_Chuan_In.pdf";
+        }
+        if (runBtn) runBtn.innerHTML = '<i class="fas fa-object-group"></i> Ghép tất cả thành 1 file PDF (.pdf)';
+        if (badgeRight) {
+          badgeRight.className = "text-[11px] font-extrabold bg-rose-100 text-rose-700 border border-rose-300 px-2.5 py-0.5 rounded-full";
+          badgeRight.textContent = "PDF • CHẴN TRANG";
+        }
+        if (m2Label) m2Label.textContent = "Tổng số trang PDF ghép";
+        if (m3Label) m3Label.textContent = "Mặt trắng đã chèn";
+      }
+
+      const mergePanelVisible = !document.getElementById("panelMerge").classList.contains("hidden");
+      if (mergePanelVisible) {
+        if (sampleWordBtn) sampleWordBtn.classList.toggle("hidden", isPdf);
+        if (samplePdfBtn) samplePdfBtn.classList.toggle("hidden", !isPdf);
+      }
+
+      renderMergeQueueUI();
+    }
+
+    document.getElementById("mergeModeBtnDocx").addEventListener("click", () => setMergeMode("docx"));
+    document.getElementById("mergeModeBtnPdf").addEventListener("click", () => setMergeMode("pdf"));
 
     function renderMergeQueueUI() {
       const listEl = document.getElementById("mergeFileList");
       const countEl = document.getElementById("mergeQueueCount");
       if (!listEl || !countEl) return;
-      countEl.textContent = String(mergeQueue.length);
+      const queue = getActiveMergeQueue();
+      const isPdf = mergeMode === "pdf";
+      const breakEl = document.querySelector('input[name="mergeBreakType"]:checked');
+      const isOddMode = !breakEl || breakEl.value === "oddPage";
 
-      if (mergeQueue.length === 0) {
+      countEl.textContent = String(queue.length);
+
+      if (queue.length === 0) {
+        const extLabel = isPdf ? ".pdf" : ".docx";
+        const sampleLabel = isPdf ? '"Thử 3 đề mẫu PDF (Mã 101–103)"' : '"Thử 3 đề mẫu Word (Mã 101–103)"';
         listEl.innerHTML = `<div class="py-7 px-4 text-center text-xs text-[#57534e]">
-          Chưa có file đề nào. Hãy chọn từ <strong>2 file .docx trở lên</strong> hoặc bấm nút <strong class="text-[#92400e]">"Thử ngay với 3 đề mẫu (Mã 101–103)"</strong> ở trên.
+          Chưa có file đề nào. Hãy chọn từ <strong>2 file ${extLabel} trở lên</strong> hoặc bấm nút <strong class="text-[#92400e]">${sampleLabel}</strong> ở trên.
         </div>`;
         return;
       }
 
-      listEl.innerHTML = mergeQueue.map((item, idx) => {
-        const hfBadge = item.footerPreview
-          ? `<span class="inline-flex items-center gap-1 bg-[#ede9fe] text-[#5000ff] px-2 py-0.5 rounded text-[11px] font-semibold max-w-[260px] truncate" title="${xmlEsc(item.footerPreview)}"><i class="fas fa-shoe-prints text-[10px]"></i> ${xmlEsc(item.footerPreview)}</span>`
-          : `<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[11px]">Chân trang trống (sẽ khóa trống)</span>`;
-        const npBadge = item.hasNumPages
-          ? `<span class="inline-flex items-center gap-1 bg-[#ccfbf1] text-[#0d8a81] px-2 py-0.5 rounded text-[11px] font-bold"><i class="fas fa-lock text-[10px]"></i> Khóa NUMPAGES ➔ ${item.sectionCount > 1 ? "PAGEREF" : "SECTIONPAGES"}</span>`
-          : `<span class="inline-flex items-center gap-1 bg-[#f9f6f0] text-[#57534e] border border-[#e5dcd0] px-2 py-0.5 rounded text-[11px]">${item.sectionCount} Section</span>`;
+      listEl.innerHTML = queue.map((item, idx) => {
+        const isOddPages = item.detectedPages > 0 && item.detectedPages % 2 === 1;
+        let badgesHtml = "";
+        if (isPdf) {
+          badgesHtml += `<span class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded text-[11px] font-semibold"><i class="fas fa-file-pdf text-[10px]"></i> ${item.detectedPages} trang</span>`;
+          if (isOddMode && isOddPages) {
+            badgesHtml += `<span class="inline-flex items-center gap-1 bg-[#ccfbf1] text-[#0d8a81] px-2 py-0.5 rounded text-[11px] font-bold"><i class="fas fa-plus-circle text-[10px]"></i> Chẵn trang: ${item.detectedPages} → ${item.detectedPages + 1} trang</span>`;
+          } else {
+            badgesHtml += `<span class="inline-flex items-center gap-1 bg-[#f9f6f0] text-[#57534e] border border-[#e5dcd0] px-2 py-0.5 rounded text-[11px]">${xmlEsc(item.footerPreview)}</span>`;
+          }
+        } else {
+          const hfBadge = item.footerPreview
+            ? `<span class="inline-flex items-center gap-1 bg-[#ede9fe] text-[#5000ff] px-2 py-0.5 rounded text-[11px] font-semibold max-w-[260px] truncate" title="${xmlEsc(item.footerPreview)}"><i class="fas fa-shoe-prints text-[10px]"></i> ${xmlEsc(item.footerPreview)}</span>`
+            : `<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[11px]">Chân trang trống (sẽ khóa trống)</span>`;
+          const npBadge = item.hasNumPages
+            ? `<span class="inline-flex items-center gap-1 bg-[#ccfbf1] text-[#0d8a81] px-2 py-0.5 rounded text-[11px] font-bold"><i class="fas fa-lock text-[10px]"></i> Khóa NUMPAGES ➔ ${item.sectionCount > 1 ? "PAGEREF" : "SECTIONPAGES"}</span>`
+            : `<span class="inline-flex items-center gap-1 bg-[#f9f6f0] text-[#57534e] border border-[#e5dcd0] px-2 py-0.5 rounded text-[11px]">${item.sectionCount} Section</span>`;
+          const oddBadge = (isOddMode && isOddPages)
+            ? `<span class="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[11px] font-bold">+1 mặt trắng (${item.detectedPages}→${item.detectedPages + 1})</span>`
+            : "";
+          badgesHtml = hfBadge + npBadge + oddBadge;
+        }
 
+        const numBg = isPdf ? "bg-rose-600" : "bg-[#5000ff]";
         return `<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 bg-white hover:bg-[#faf8f5]">
           <div class="flex items-start gap-2.5 min-w-0">
-            <span class="w-6 h-6 rounded-md bg-[#5000ff] text-white font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">${idx + 1}</span>
+            <span class="w-6 h-6 rounded-md ${numBg} text-white font-extrabold text-xs flex items-center justify-center shrink-0 mt-0.5">${idx + 1}</span>
             <div class="min-w-0 space-y-1">
               <div class="text-xs sm:text-sm font-extrabold text-[#1c1917] truncate" title="${xmlEsc(item.name)}">${xmlEsc(item.name)} <span class="font-normal text-[#57534e]">(${(item.size / 1024).toFixed(1)} KB${item.pageHint ? ` • ${item.pageHint} trang` : ""})</span></div>
-              <div class="flex flex-wrap items-center gap-1.5">${hfBadge}${npBadge}</div>
+              <div class="flex flex-wrap items-center gap-1.5">${badgesHtml}</div>
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0 self-end sm:self-center">
             <button type="button" data-merge-act="up" data-idx="${idx}" ${idx === 0 ? "disabled" : ""} class="w-7 h-7 rounded-lg border border-[#d6c8b6] bg-white hover:bg-[#ede9fe] disabled:opacity-35 text-xs font-bold text-[#1c1917]" title="Đưa lên trên">↑</button>
-            <button type="button" data-merge-act="down" data-idx="${idx}" ${idx === mergeQueue.length - 1 ? "disabled" : ""} class="w-7 h-7 rounded-lg border border-[#d6c8b6] bg-white hover:bg-[#ede9fe] disabled:opacity-35 text-xs font-bold text-[#1c1917]" title="Đưa xuống dưới">↓</button>
+            <button type="button" data-merge-act="down" data-idx="${idx}" ${idx === queue.length - 1 ? "disabled" : ""} class="w-7 h-7 rounded-lg border border-[#d6c8b6] bg-white hover:bg-[#ede9fe] disabled:opacity-35 text-xs font-bold text-[#1c1917]" title="Đưa xuống dưới">↓</button>
             <button type="button" data-merge-act="remove" data-idx="${idx}" class="w-7 h-7 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-xs font-bold text-rose-700" title="Bỏ file này">✕</button>
           </div>
         </div>`;
       }).join("");
 
       const outNameInput = document.getElementById("mergeOutputName");
-      if (outNameInput && /^Ghep_(\d+_)?De_Thi_Khoa_Trang\.docx$/i.test(outNameInput.value.trim())) {
-        outNameInput.value = `Ghep_${mergeQueue.length}_De_Thi_Khoa_Trang.docx`;
+      if (outNameInput) {
+        if (!isPdf && /^Ghep_(\d+_)?De_Thi_Khoa_Trang\.docx$/i.test(outNameInput.value.trim())) {
+          outNameInput.value = `Ghep_${queue.length}_De_Thi_Khoa_Trang.docx`;
+        } else if (isPdf && /^Ghep_(\d+_)?De_Thi_Chuan_In\.pdf$/i.test(outNameInput.value.trim())) {
+          outNameInput.value = `Ghep_${queue.length}_De_Thi_Chuan_In.pdf`;
+        }
       }
     }
 
     async function addFilesToMergeQueue(fileList) {
-      const files = Array.from(fileList || []).filter(f => /\.docx$/i.test(f.name));
-      if (files.length === 0) {
-        showToast("Vui lòng chọn các file Word định dạng .docx!", "error");
+      const allFiles = Array.from(fileList || []);
+      const docxFiles = allFiles.filter(f => /\.docx$/i.test(f.name));
+      const pdfFiles = allFiles.filter(f => /\.pdf$/i.test(f.name));
+
+      if (docxFiles.length === 0 && pdfFiles.length === 0) {
+        showToast("Vui lòng chọn các file đề định dạng Word (.docx) hoặc PDF (.pdf)!", "error");
         return;
       }
+
+      // Tự động chuyển chế độ nếu người dùng chọn khác loại file khi hàng chờ đang trống
+      let targetMode = mergeMode;
+      if (mergeMode === "docx" && docxFiles.length === 0 && pdfFiles.length > 0) {
+        if (mergeQueues.docx.length === 0) {
+          setMergeMode("pdf");
+          targetMode = "pdf";
+        } else {
+          showToast("Bạn đang ở chế độ ghép Word (.docx). Hãy bấm chuyển sang chế độ GHÉP FILE PDF (.pdf) ở trên để ghép file PDF!", "error");
+          return;
+        }
+      } else if (mergeMode === "pdf" && pdfFiles.length === 0 && docxFiles.length > 0) {
+        if (mergeQueues.pdf.length === 0) {
+          setMergeMode("docx");
+          targetMode = "docx";
+        } else {
+          showToast("Bạn đang ở chế độ ghép PDF (.pdf). Hãy bấm chuyển sang chế độ GHÉP FILE WORD (.docx) ở trên để ghép file Word!", "error");
+          return;
+        }
+      }
+
+      const filesToLoad = targetMode === "pdf" ? pdfFiles : docxFiles;
+      const queue = mergeQueues[targetMode];
       let added = 0;
-      for (const f of files) {
+
+      for (const f of filesToLoad) {
         try {
           const u8 = new Uint8Array(await f.arrayBuffer());
-          const info = await inspectSingleExamDocx(f.name, u8);
-          mergeQueue.push(info);
+          const info = targetMode === "pdf"
+            ? await inspectSingleExamPdf(f.name, u8)
+            : await inspectSingleExamDocx(f.name, u8);
+          queue.push(info);
           added++;
         } catch (err) {
           showToast(`Không thể đọc "${f.name}": ${err.message}`, "error");
@@ -7444,7 +7801,8 @@
       }
       renderMergeQueueUI();
       if (added > 0) {
-        showToast(`Đã nạp ${added} file đề thi vào hàng chờ ghép (tổng ${mergeQueue.length} file).`, "success");
+        const label = targetMode === "pdf" ? "PDF" : "Word";
+        showToast(`Đã nạp ${added} file đề ${label} vào hàng chờ ghép (tổng ${queue.length} file).`, "success");
       }
     }
 
@@ -7456,14 +7814,14 @@
     const mergeDropZone = document.getElementById("mergeDropZone");
     mergeDropZone.addEventListener("dragover", (e) => {
       e.preventDefault();
-      mergeDropZone.classList.add("bg-teal-50");
+      mergeDropZone.classList.add(mergeMode === "pdf" ? "bg-rose-50" : "bg-teal-50");
     });
     mergeDropZone.addEventListener("dragleave", () => {
-      mergeDropZone.classList.remove("bg-teal-50");
+      mergeDropZone.classList.remove("bg-teal-50", "bg-rose-50");
     });
     mergeDropZone.addEventListener("drop", async (e) => {
       e.preventDefault();
-      mergeDropZone.classList.remove("bg-teal-50");
+      mergeDropZone.classList.remove("bg-teal-50", "bg-rose-50");
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         await addFilesToMergeQueue(e.dataTransfer.files);
       }
@@ -7472,35 +7830,38 @@
     document.getElementById("mergeFileList").addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-merge-act]");
       if (!btn) return;
+      const queue = getActiveMergeQueue();
       const act = btn.getAttribute("data-merge-act");
       const idx = parseInt(btn.getAttribute("data-idx"), 10);
-      if (isNaN(idx) || idx < 0 || idx >= mergeQueue.length) return;
+      if (isNaN(idx) || idx < 0 || idx >= queue.length) return;
       if (act === "up" && idx > 0) {
-        [mergeQueue[idx - 1], mergeQueue[idx]] = [mergeQueue[idx], mergeQueue[idx - 1]];
-      } else if (act === "down" && idx < mergeQueue.length - 1) {
-        [mergeQueue[idx + 1], mergeQueue[idx]] = [mergeQueue[idx], mergeQueue[idx + 1]];
+        [queue[idx - 1], queue[idx]] = [queue[idx], queue[idx - 1]];
+      } else if (act === "down" && idx < queue.length - 1) {
+        [queue[idx + 1], queue[idx]] = [queue[idx], queue[idx + 1]];
       } else if (act === "remove") {
-        mergeQueue.splice(idx, 1);
+        queue.splice(idx, 1);
       }
       renderMergeQueueUI();
     });
 
     document.getElementById("mergeSortAscBtn").addEventListener("click", () => {
-      if (mergeQueue.length < 2) return;
-      mergeQueue.sort((a, b) => a.name.localeCompare(b.name, "vi", { numeric: true, sensitivity: "base" }));
+      const queue = getActiveMergeQueue();
+      if (queue.length < 2) return;
+      queue.sort((a, b) => a.name.localeCompare(b.name, "vi", { numeric: true, sensitivity: "base" }));
       renderMergeQueueUI();
       showToast("Đã sắp xếp danh sách đề theo thứ tự A → Z tự nhiên.", "success");
     });
 
     document.getElementById("mergeReverseBtn").addEventListener("click", () => {
-      if (mergeQueue.length < 2) return;
-      mergeQueue.reverse();
+      const queue = getActiveMergeQueue();
+      if (queue.length < 2) return;
+      queue.reverse();
       renderMergeQueueUI();
       showToast("Đã đảo ngược thứ tự ghép đề.", "success");
     });
 
     document.getElementById("mergeClearAllBtn").addEventListener("click", () => {
-      mergeQueue = [];
+      mergeQueues[mergeMode] = [];
       renderMergeQueueUI();
       showToast("Đã xóa toàn bộ danh sách file chờ ghép.", "success");
     });
@@ -7521,22 +7882,28 @@
     }
 
     async function executeMergeAction() {
-      if (mergeQueue.length === 0) {
-        highlightMergeDropZone('Vui lòng bấm vào khung BƯỚC 1 (.docx) để chọn các file đề cần ghép, hoặc bấm nút "⚡ Thử ngay với 3 đề mẫu (Mã 101–103)"!');
+      const queue = getActiveMergeQueue();
+      const isPdf = mergeMode === "pdf";
+      const extLabel = isPdf ? ".pdf" : ".docx";
+      const sampleLabel = isPdf ? "Thử 3 đề mẫu PDF (Mã 101–103)" : "Thử 3 đề mẫu Word (Mã 101–103)";
+
+      if (queue.length === 0) {
+        highlightMergeDropZone(`Vui lòng bấm vào khung BƯỚC 1 (${extLabel}) để chọn các file đề cần ghép, hoặc bấm nút "⚡ ${sampleLabel}"!`);
         return;
       }
-      if (mergeQueue.length < 2) {
-        highlightMergeDropZone('Bạn mới chọn 1 file đề. Vui lòng bấm vào khung BƯỚC 1 để nạp thêm ít nhất 1 file Word (.docx) nữa để ghép!');
+      if (queue.length < 2) {
+        highlightMergeDropZone(`Bạn mới chọn 1 file đề. Vui lòng bấm vào khung BƯỚC 1 để nạp thêm ít nhất 1 file (${extLabel}) nữa để ghép!`);
         return;
       }
+
       const runBtn = document.getElementById("runMergeDocxBtn");
       const origHtml = runBtn.innerHTML;
       runBtn.disabled = true;
-      runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang khóa Header/Footer &amp; ghép file...';
+      runBtn.innerHTML = isPdf
+        ? '<i class="fas fa-spinner fa-spin"></i> Đang ghép các file PDF &amp; chẵn trang...'
+        : '<i class="fas fa-spinner fa-spin"></i> Đang khóa Header/Footer &amp; ghép file...';
 
       try {
-        const lockHF = document.getElementById("optMergeLockHF").checked;
-        const lockPageNumbers = document.getElementById("optMergeLockPageNum").checked;
         const breakEl = document.querySelector('input[name="mergeBreakType"]:checked');
         const breakType = breakEl ? breakEl.value : "oddPage";
         const useCustomMargins = document.getElementById("optMergeCustomMargins").checked;
@@ -7552,44 +7919,82 @@
           right: parseMm("mergeMarginRight", 15)
         } : null;
 
-        const result = await mergeExamDocxFiles(mergeQueue, { lockHF, lockPageNumbers, breakType, customMargins });
+        if (isPdf) {
+          const result = await mergeExamPdfFiles(queue, { breakType, customMargins });
+          const rawName = (document.getElementById("mergeOutputName").value || "").trim() || `Ghep_${queue.length}_De_Thi_Chuan_In.pdf`;
+          mergedOutFileName = /\.pdf$/i.test(rawName) ? rawName : rawName.replace(/\.docx$/i, "") + ".pdf";
 
-        const rawName = (document.getElementById("mergeOutputName").value || "").trim() || `Ghep_${mergeQueue.length}_De_Thi_Khoa_Trang.docx`;
-        mergedOutFileName = /\.docx$/i.test(rawName) ? rawName : rawName + ".docx";
+          const blob = new Blob([result.bytes], { type: "application/pdf" });
+          if (mergedBlobUrl) URL.revokeObjectURL(mergedBlobUrl);
+          mergedBlobUrl = URL.createObjectURL(blob);
 
-        const blob = new Blob([result.bytes], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-        if (mergedBlobUrl) URL.revokeObjectURL(mergedBlobUrl);
-        mergedBlobUrl = URL.createObjectURL(blob);
+          document.getElementById("statMergeFiles").textContent = String(result.totalFiles);
+          document.getElementById("statMergeLockedHF").textContent = String(result.totalPagesOut);
+          document.getElementById("statMergeFixedFields").textContent = String(result.totalBlankInserted);
+          document.getElementById("statMergeOutSize").textContent = `${(blob.size / 1024).toFixed(1)} KB`;
+          document.getElementById("mergeAuditBadge").textContent = `${result.totalFiles} đề PDF • ${result.totalPagesOut} trang`;
 
-        document.getElementById("statMergeFiles").textContent = String(result.totalFiles);
-        document.getElementById("statMergeLockedHF").textContent = String(result.totalLockedHF);
-        document.getElementById("statMergeFixedFields").textContent = String(result.totalFixedFields);
-        document.getElementById("statMergeOutSize").textContent = `${(blob.size / 1024).toFixed(1)} KB`;
-        document.getElementById("mergeAuditBadge").textContent = `${result.totalFiles} đề đã ghép`;
+          const dlBtn = document.getElementById("downloadMergedBtn");
+          dlBtn.disabled = false;
+          dlBtn.innerHTML = `<i class="fas fa-download"></i> Tải lại (${xmlEsc(mergedOutFileName)})`;
 
-        const dlBtn = document.getElementById("downloadMergedBtn");
-        dlBtn.disabled = false;
-        dlBtn.innerHTML = `<i class="fas fa-download"></i> Tải lại (${xmlEsc(mergedOutFileName)})`;
+          const tbody = document.getElementById("mergeAuditBody");
+          tbody.innerHTML = result.auditRows.map(row => `
+            <tr class="hover:bg-slate-50">
+              <td class="py-2.5 px-3 font-extrabold text-rose-600">${row.idx}</td>
+              <td class="py-2.5 px-3 font-bold text-[#1c1917]">${xmlEsc(row.name)}</td>
+              <td class="py-2.5 px-3 text-xs text-[#44403c]">${xmlEsc(row.footerPreview)}</td>
+              <td class="py-2.5 px-3 text-xs">
+                <span class="block font-bold text-[#0d8a81]">${xmlEsc(row.resources)}</span>
+              </td>
+              <td class="py-2.5 px-3"><span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">${row.status}</span></td>
+            </tr>
+          `).join("");
 
-        const tbody = document.getElementById("mergeAuditBody");
-        tbody.innerHTML = result.auditRows.map(row => `
-          <tr class="hover:bg-slate-50">
-            <td class="py-2.5 px-3 font-extrabold text-[#5000ff]">${row.idx}</td>
-            <td class="py-2.5 px-3 font-bold text-[#1c1917]">${xmlEsc(row.name)}</td>
-            <td class="py-2.5 px-3 text-xs text-[#44403c]">${xmlEsc(row.footerPreview)}</td>
-            <td class="py-2.5 px-3 text-xs">
-              <span class="block font-bold text-[#0d8a81]">${row.sections} Section • ${row.fixedFields} trường ➔ ${row.fieldMode}</span>
-              <span class="text-[#57534e]">${xmlEsc(row.resources)}</span>
-            </td>
-            <td class="py-2.5 px-3"><span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">${row.status}</span></td>
-          </tr>
-        `).join("");
+          triggerDownload(mergedBlobUrl, mergedOutFileName);
+          showToast(`Đã ghép xong ${result.totalFiles} file PDF (tổng ${result.totalPagesOut} trang, chèn ${result.totalBlankInserted} mặt trắng chẵn trang)!`, "success");
+        } else {
+          const lockHF = document.getElementById("optMergeLockHF").checked;
+          const lockPageNumbers = document.getElementById("optMergeLockPageNum").checked;
+          const result = await mergeExamDocxFiles(queue, { lockHF, lockPageNumbers, breakType, customMargins });
 
-        triggerDownload(mergedBlobUrl, mergedOutFileName);
-        showToast(`Đã ghép xong ${result.totalFiles} file đề thi, khóa ${result.totalLockedHF} Header/Footer và ${result.totalFixedFields} trường tổng trang!`, "success");
+          const rawName = (document.getElementById("mergeOutputName").value || "").trim() || `Ghep_${queue.length}_De_Thi_Khoa_Trang.docx`;
+          mergedOutFileName = /\.docx$/i.test(rawName) ? rawName : rawName.replace(/\.pdf$/i, "") + ".docx";
+
+          const blob = new Blob([result.bytes], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+          if (mergedBlobUrl) URL.revokeObjectURL(mergedBlobUrl);
+          mergedBlobUrl = URL.createObjectURL(blob);
+
+          document.getElementById("statMergeFiles").textContent = String(result.totalFiles);
+          document.getElementById("statMergeLockedHF").textContent = String(result.totalLockedHF);
+          document.getElementById("statMergeFixedFields").textContent = String(result.totalFixedFields);
+          document.getElementById("statMergeOutSize").textContent = `${(blob.size / 1024).toFixed(1)} KB`;
+          document.getElementById("mergeAuditBadge").textContent = `${result.totalFiles} đề Word đã ghép`;
+
+          const dlBtn = document.getElementById("downloadMergedBtn");
+          dlBtn.disabled = false;
+          dlBtn.innerHTML = `<i class="fas fa-download"></i> Tải lại (${xmlEsc(mergedOutFileName)})`;
+
+          const tbody = document.getElementById("mergeAuditBody");
+          tbody.innerHTML = result.auditRows.map(row => `
+            <tr class="hover:bg-slate-50">
+              <td class="py-2.5 px-3 font-extrabold text-[#5000ff]">${row.idx}</td>
+              <td class="py-2.5 px-3 font-bold text-[#1c1917]">${xmlEsc(row.name)}</td>
+              <td class="py-2.5 px-3 text-xs text-[#44403c]">${xmlEsc(row.footerPreview)}</td>
+              <td class="py-2.5 px-3 text-xs">
+                <span class="block font-bold text-[#0d8a81]">${row.sections} Section • ${row.fixedFields} trường ➔ ${row.fieldMode}</span>
+                <span class="text-[#57534e]">${xmlEsc(row.resources)}</span>
+              </td>
+              <td class="py-2.5 px-3"><span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">${row.status}</span></td>
+            </tr>
+          `).join("");
+
+          triggerDownload(mergedBlobUrl, mergedOutFileName);
+          showToast(`Đã ghép xong ${result.totalFiles} file đề Word, khóa ${result.totalLockedHF} Header/Footer và ${result.totalFixedFields} trường tổng trang!`, "success");
+        }
       } catch (err) {
-        console.error("Lỗi khi ghép file Word:", err);
-        showToast("Lỗi khi ghép file Word: " + (err && err.message ? err.message : String(err)), "error");
+        console.error("Lỗi khi ghép file:", err);
+        showToast("Lỗi khi ghép file: " + (err && err.message ? err.message : String(err)), "error");
       } finally {
         runBtn.disabled = false;
         runBtn.innerHTML = origHtml;
@@ -7599,14 +8004,16 @@
     document.querySelectorAll('input[name="mergeBreakType"]').forEach(radio => {
       radio.addEventListener("change", () => {
         const hintEl = document.getElementById("mergeBreakHint");
-        if (!hintEl) return;
-        if (radio.value === "oddPage") {
-          hintEl.className = "sm:col-span-2 text-[11px] text-[#0d8a81] leading-relaxed font-medium pt-2 border-t border-[#e5dcd0]";
-          hintEl.textContent = "Nếu số trang của đề là số lẻ (3, 5...) thì tự chèn 1 mặt trắng thành số chẵn (4, 6...) để khi in 2 mặt / xuất PDF. Nếu số trang của đề là chẵn (2, 4...) thì giữ nguyên.";
-        } else {
-          hintEl.className = "sm:col-span-2 text-[11px] text-[#57534e] leading-relaxed pt-2 border-t border-[#e5dcd0]";
-          hintEl.textContent = "• Đề kế tiếp nối ngay trang sau, không chèn thêm mặt trắng (phù hợp khi in 1 mặt).";
+        if (hintEl) {
+          if (radio.value === "oddPage") {
+            hintEl.className = "sm:col-span-2 text-[11px] text-[#0d8a81] leading-relaxed font-medium pt-2 border-t border-[#e5dcd0]";
+            hintEl.textContent = "Nếu số trang của đề là số lẻ (3, 5...) thì tự chèn 1 mặt trắng thành số chẵn (4, 6...) để khi in 2 mặt / xuất PDF. Nếu số trang của đề là chẵn (2, 4...) thì giữ nguyên.";
+          } else {
+            hintEl.className = "sm:col-span-2 text-[11px] text-[#57534e] leading-relaxed pt-2 border-t border-[#e5dcd0]";
+            hintEl.textContent = "• Đề kế tiếp nối ngay trang sau, không chèn thêm mặt trắng (phù hợp khi in 1 mặt).";
+          }
         }
+        renderMergeQueueUI();
       });
     });
 
@@ -7625,7 +8032,8 @@
     document.getElementById("loadSampleMergeBtn").addEventListener("click", async () => {
       try {
         switchMathEqTab("merge");
-        mergeQueue = [];
+        setMergeMode("docx");
+        mergeQueues.docx = [];
         const samples = [
           { code: "101", pages: 2 },
           { code: "102", pages: 3 },
@@ -7634,12 +8042,34 @@
         for (const s of samples) {
           const bytes = await buildSampleExamDocxBytes(s.code, s.pages);
           const info = await inspectSingleExamDocx(`De_Thi_Mau_Ma_${s.code}_${s.pages}Trang.docx`, bytes);
-          mergeQueue.push(info);
+          mergeQueues.docx.push(info);
         }
         renderMergeQueueUI();
         await executeMergeAction();
       } catch (err) {
-        showToast("Không thể tạo đề mẫu: " + (err && err.message ? err.message : String(err)), "error");
+        showToast("Không thể tạo đề mẫu Word: " + (err && err.message ? err.message : String(err)), "error");
+      }
+    });
+
+    document.getElementById("loadSampleMergePdfBtn").addEventListener("click", async () => {
+      try {
+        switchMathEqTab("merge");
+        setMergeMode("pdf");
+        mergeQueues.pdf = [];
+        const samples = [
+          { code: "101", pages: 2 },
+          { code: "102", pages: 3 },
+          { code: "103", pages: 2 }
+        ];
+        for (const s of samples) {
+          const bytes = await buildSampleExamPdfBytes(s.code, s.pages);
+          const info = await inspectSingleExamPdf(`De_Thi_Mau_Ma_${s.code}_${s.pages}Trang.pdf`, bytes);
+          mergeQueues.pdf.push(info);
+        }
+        renderMergeQueueUI();
+        await executeMergeAction();
+      } catch (err) {
+        showToast("Không thể tạo đề mẫu PDF: " + (err && err.message ? err.message : String(err)), "error");
       }
     });
 
